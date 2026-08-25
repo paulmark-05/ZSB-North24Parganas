@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Zila Sainik Board — Official Portal</title>
+  <meta name="description" content="Official portal of the Zila Sainik Board — notices, visitor management, grievance redressal and services." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="inner">
+      <div class="logo" id="logo">
+        <span class="ph">LOGO</span>
+      </div>
+      <div class="brand">
+        <h1 id="orgName">Zila Sainik Board</h1>
+        <p id="district">District Sainik Welfare Office</p>
+      </div>
+      <div class="header-flag" aria-hidden="true"><i></i><i></i><i></i></div>
+    </div>
+  </header>
+
+  <!-- Scrolling notice banner -->
+  <div class="marquee" id="marquee">
+    <div class="tag">Notice</div>
+    <div class="viewport"><div class="track" id="track"></div></div>
+  </div>
+
+  <main class="shell">
+
+    <!-- Services -->
+    <section class="section pad">
+      <h2 class="section-title"><span>Services</span></h2>
+      <div class="cards" id="cards"></div>
+    </section>
+
+    <!-- Advertisements -->
+    <section class="section pad" id="adSection" hidden>
+      <h2 class="section-title"><span>Sponsored</span></h2>
+      <div class="ad-list" id="ads"></div>
+    </section>
+
+    <!-- Vendors -->
+    <section class="section pad">
+      <h2 class="section-title"><span>Empanelled Vendors</span></h2>
+      <div class="vendor-list" id="vendors"></div>
+    </section>
+
+    <footer class="site-footer">
+      <p>© <span id="year"></span> <span id="footOrg">Zila Sainik Board</span>. All rights reserved.</p>
+      <p><a href="/admin">Administrator Login</a></p>
+    </footer>
+  </main>
+
+  <!-- Redirect confirmation modal -->
+  <div class="modal-backdrop" id="modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+      <div class="head" id="mTitle">Leaving this site</div>
+      <div class="body">
+        <p id="mText"></p>
+        <div class="url" id="mUrl"></div>
+        <div class="actions">
+          <button class="btn ghost" id="mCancel" type="button">Cancel</button>
+          <button class="btn red" id="mGo" type="button">Continue →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toasts"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/public.js"></script>
+</body>
+</html>

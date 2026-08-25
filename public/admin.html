@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin CMS — Zila Sainik Board</title>
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="admin-body">
+
+  <!-- ============================ LOGIN ============================ -->
+  <div class="login-page" id="loginView">
+    <form class="login-card" id="loginForm" autocomplete="on">
+      <div class="top">
+        <div class="logo"><span class="ph">LOGO</span></div>
+        <h1>Admin CMS Portal</h1>
+        <p>Zila Sainik Board</p>
+      </div>
+      <div class="form">
+        <div class="alert" id="loginErr" hidden></div>
+        <div class="field">
+          <label for="u">Username</label>
+          <input class="input" id="u" name="username" autocomplete="username" placeholder="admin" required />
+        </div>
+        <div class="field">
+          <label for="p">Password</label>
+          <input class="input" id="p" name="password" type="password" autocomplete="current-password" placeholder="••••••••" required />
+        </div>
+        <button class="btn block" id="loginBtn" type="submit">Sign in</button>
+        <p class="muted" style="text-align:center;margin:14px 0 0;font-size:12px;">
+          Default credentials are set in <code>.env</code>. Change the password after first login.
+        </p>
+      </div>
+    </form>
+  </div>
+
+  <!-- ============================ APP ============================== -->
+  <div id="appView" hidden>
+    <header class="admin-top">
+      <div class="inner">
+        <div class="mark">Admin CMS<small>Zila Sainik Board</small></div>
+        <div class="spacer"></div>
+        <span class="who" id="who"></span>
+        <a class="btn ghost sm" href="/" target="_blank" rel="noopener">View site ↗</a>
+        <button class="btn ghost sm" id="logoutBtn" type="button">Sign out</button>
+      </div>
+    </header>
+
+    <div class="admin-wrap">
+      <nav class="side" id="side">
+        <button class="nav-item active" data-tab="notices"><span class="n">📢</span> Notice Banner</button>
+        <button class="nav-item" data-tab="services"><span class="n">🔗</span> VMS &amp; Grievance</button>
+        <button class="nav-item" data-tab="ad"><span class="n">🖼</span> Advertisement</button>
+        <button class="nav-item" data-tab="vendors"><span class="n">🏪</span> Vendors</button>
+        <button class="nav-item" data-tab="settings"><span class="n">⚙️</span> Logo &amp; Theme</button>
+        <button class="nav-item" data-tab="account"><span class="n">🔐</span> Account</button>
+      </nav>
+
+      <main>
+        <!-- ---------------- NOTICES ---------------- -->
+        <section class="panel" data-panel="notices">
+          <header>
+            <div>
+              <h2>Notice Banner</h2>
+              <p>Notices scroll in sequence on the public homepage. Each auto-expires after its end date.</p>
+            </div>
+            <div class="right"><button class="btn sm" id="newNotice" type="button">+ New notice</button></div>
+          </header>
+          <div class="content">
+            <!-- editor -->
+            <form id="noticeForm" hidden>
+              <div class="alert" id="noticeErr" hidden></div>
+              <div class="field">
+                <label for="nType">Notice type</label>
+                <select class="select" id="nType">
+                  <option value="counter_closed">Counter(s) closed</option>
+                  <option value="secretary_unavailable">Secretary not available</option>
+                  <option value="office_closed">Office closed (occasion)</option>
+                  <option value="custom">Custom message</option>
+                </select>
+              </div>
+
+              <div class="field" id="fCounters">
+                <label>Which counters are closed? (1–7)</label>
+                <div class="chips" id="counterChips"></div>
+                <div class="hint">Select one or more counters.</div>
+              </div>
+
+              <div class="field" id="fOccasion" hidden>
+                <label for="nOccasion">Occasion</label>
+                <input class="input" id="nOccasion" placeholder="e.g. Independence Day" />
+              </div>
+
+              <div class="field" id="fCustom" hidden>
+                <label for="nCustom">Custom message</label>
+                <textarea class="textarea" id="nCustom" placeholder="Type the exact notice text to display…"></textarea>
+              </div>
+
+              <div class="row">
+                <div class="field">
+                  <label for="nStart">Start date</label>
+                  <input class="input" id="nStart" type="date" />
+                </div>
+                <div class="field">
+                  <label for="nEnd">End date</label>
+                  <input class="input" id="nEnd" type="date" />
+                  <div class="hint">Same as start date for a single day.</div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Live preview</label>
+                <div class="preview" id="nPreview"><em>Fill the form to see the banner text…</em></div>
+              </div>
+
+              <div class="field">
+                <label class="switch"> Active 
+                  <input type="checkbox" id="nActive" checked /><span class="slot"></span> 
+                </label>
+              </div>
+
+              <div class="inline">
+                <button class="btn" id="saveNotice" type="submit">Save notice</button>
+                <button class="btn ghost" id="cancelNotice" type="button">Cancel</button>
+              </div>
+              <div class="divider"></div>
+            </form>
+
+            <div id="noticeList"></div>
+          </div>
+        </section>
+
+        <!-- ---------------- SERVICES ---------------- -->
+        <section class="panel" data-panel="services" hidden>
+          <header>
+            <div>
+              <h2>VMS &amp; Grievance Links</h2>
+              <p>Set where each card sends the visitor. A confirmation appears before redirecting.</p>
+            </div>
+          </header>
+          <div class="content">
+            <form id="linksForm">
+              <div class="alert" id="linksErr" hidden></div>
+
+              <h3 style="margin:0 0 12px;font-size:14px;color:var(--navy);">Visitor Management System</h3>
+              <div class="field"><label class="switch"><span>Show this card  </span><input type="checkbox" id="vmsEnabled" checked /><span class="slot"></span></label>
+              <div class="row">
+                <div class="field"><label for="vmsLabel">Card title</label><input class="input" id="vmsLabel" /></div>
+                <div class="field"><label for="vmsLink">Redirect URL</label><input class="input" id="vmsLink" placeholder="https://…" /></div>
+              </div>
+              <div class="field"><label for="vmsDesc">Card description</label><input class="input" id="vmsDesc" /></div>
+              <div class="field"><label for="vmsPrev">Confirmation text</label><textarea class="textarea" id="vmsPrev"></textarea></div>
+
+              <div class="divider"></div>
+
+              <h3 style="margin:0 0 12px;font-size:14px;color:var(--navy);">Grievance Redressal</h3>
+              <div class="field"><label class="switch"><span>Show this card  </span><input type="checkbox" id="grvEnabled" checked /><span class="slot"></span></label></div>
+              <div class="row">
+                <div class="field"><label for="grvLabel">Card title</label><input class="input" id="grvLabel" /></div>
+                <div class="field"><label for="grvLink">Redirect URL</label><input class="input" id="grvLink" placeholder="https://…" /></div>
+              </div>
+              <div class="field"><label for="grvDesc">Card description</label><input class="input" id="grvDesc" /></div>
+              <div class="field"><label for="grvPrev">Confirmation text</label><textarea class="textarea" id="grvPrev"></textarea></div>
+
+              <button class="btn" type="submit">Save links</button>
+            </form>
+          </div>
+        </section>
+
+        <!-- ---------------- ADS ---------------- -->
+        <section class="panel" data-panel="ad" hidden>
+          <header>
+            <div>
+              <h2>Advertisements</h2>
+              <p>Add one or more ads. Each can redirect to a website or to a poster on Google Drive.</p>
+            </div>
+            <div class="right"><button class="btn sm" id="newAd" type="button">+ New ad</button></div>
+          </header>
+          <div class="content">
+            <form id="adForm" hidden>
+              <div class="alert" id="adErr" hidden></div>
+              <div class="row">
+                <div class="field"><label for="adName2">Business name</label><input class="input" id="adName2" placeholder="e.g. Veer Motors" /></div>
+                <div class="field"><label for="adCaption">Caption / label</label><input class="input" id="adCaption" placeholder="Advertisement" /></div>
+              </div>
+              <div class="field">
+                <label>Link type</label>
+                <div class="inline">
+                  <label class="radio-opt"><input type="radio" name="adLinkType" value="website" checked /> Website</label>
+                  <label class="radio-opt"><input type="radio" name="adLinkType" value="drive" /> Google Drive</label>
+                </div>
+              </div>
+              <div class="field">
+                <label for="adLink" id="adLinkLabel">Website URL (opens when the ad is clicked)</label>
+                <input class="input" id="adLink" placeholder="https://…" />
+                <div class="hint" id="adLinkHint">Any http(s) link — the advertiser's own website, landing page, etc.</div>
+              </div>
+              <div class="field">
+                <label>Poster image</label>
+                <div class="inline">
+                  <div class="ad" style="max-width:260px;cursor:default;">
+                    <div class="banner" id="adPreview">POSTER PLACEHOLDER</div>
+                  </div>
+                  <div class="stack">
+                    <input type="file" id="adFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden />
+                    <button class="btn ghost sm" type="button" id="adPick">Upload image</button>
+                    <button class="btn ghost sm" type="button" id="adClear">Remove image</button>
+                  </div>
+                </div>
+                <div class="hint">PNG / JPG / WEBP / SVG, up to 4 MB. Recommended 1200 × 600.</div>
+              </div>
+              <div class="field"><label class="switch"><span>Show on public site  </span><input type="checkbox" id="adEnabled" checked /><span class="slot"></span></label></div>
+              <div class="inline">
+                <button class="btn" type="submit">Save advertisement</button>
+                <button class="btn ghost" id="cancelAd" type="button">Cancel</button>
+              </div>
+              <div class="divider"></div>
+            </form>
+            <div id="adList"></div>
+          </div>
+        </section>
+
+        <!-- ---------------- VENDORS ---------------- -->
+        <section class="panel" data-panel="vendors" hidden>
+          <header>
+            <div>
+              <h2>Vendors</h2>
+              <p>Vendors listed on the public homepage.</p>
+            </div>
+            <div class="right"><button class="btn sm" id="newVendor" type="button">+ New vendor</button></div>
+          </header>
+          <div class="content">
+            <form id="vendorForm" hidden>
+              <div class="alert" id="vendorErr" hidden></div>
+              <div class="row">
+                <div class="field"><label for="vName">Name</label><input class="input" id="vName" placeholder="e.g. Sainik Xerox" /></div>
+                <div class="field"><label for="vCategory">Category</label><input class="input" id="vCategory" placeholder="e.g. Documentation" /></div>
+              </div>
+              <div class="row">
+                <div class="field"><label for="vLocation">Location</label><input class="input" id="vLocation" placeholder="e.g. Gate No. 1" /></div>
+                <div class="field"><label for="vPhone">Phone</label><input class="input" id="vPhone" placeholder="e.g. 9876543210" /></div>
+              </div>
+              <div class="field"><label class="switch"><input type="checkbox" id="vActive" checked /><span class="slot"></span> Visible on public site</label></div>
+              <div class="inline">
+                <button class="btn" type="submit">Save vendor</button>
+                <button class="btn ghost" id="cancelVendor" type="button">Cancel</button>
+              </div>
+              <div class="divider"></div>
+            </form>
+            <div id="vendorList"></div>
+          </div>
+        </section>
+
+        <!-- ---------------- SETTINGS ---------------- -->
+        <section class="panel" data-panel="settings" hidden>
+          <header>
+            <div>
+              <h2>Logo &amp; Theme</h2>
+              <p>Organisation identity, logo and brand colours.</p>
+            </div>
+          </header>
+          <div class="content">
+            <form id="settingsForm">
+              <div class="alert" id="setErr" hidden></div>
+              <div class="row">
+                <div class="field"><label for="sOrg">Organisation name</label><input class="input" id="sOrg" /></div>
+                <div class="field"><label for="sDist">Subtitle / district</label><input class="input" id="sDist" /></div>
+              </div>
+
+              <div class="field">
+                <label>Logo</label>
+                <div class="inline">
+                  <div class="logo" id="logoPreview" style="width:64px;height:64px;"><span class="ph">LOGO</span></div>
+                  <div class="stack">
+                    <input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden />
+                    <button class="btn ghost sm" type="button" id="logoPick">Upload logo</button>
+                    <button class="btn ghost sm" type="button" id="logoClear">Remove logo</button>
+                  </div>
+                </div>
+                <div class="hint">Square image works best (e.g. 512 × 512).</div>
+              </div>
+
+              <div class="field">
+                <label>Brand colours</label>
+                <div class="swatches">
+                  <label class="sw">Navy <input type="color" id="cNavy" /></label>
+                  <label class="sw">Red <input type="color" id="cRed" /></label>
+                  <label class="sw">Light blue <input type="color" id="cBlue" /></label>
+                </div>
+                <div class="hint">These are the logo colours used across the public site.</div>
+              </div>
+
+              <div class="field">
+                <label for="sSpeed">Banner scroll duration (seconds)</label>
+                <input class="input" id="sSpeed" type="number" min="8" max="90" />
+                <div class="hint">Higher = slower scroll. Default 22.</div>
+              </div>
+
+              <div class="inline">
+                <button class="btn" type="submit">Save settings</button>
+                <button class="btn ghost" id="resetBtn" type="button">Restore defaults</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- ---------------- ACCOUNT ---------------- -->
+        <section class="panel" data-panel="account" hidden>
+          <header>
+            <div>
+              <h2>Account</h2>
+              <p>Change the administrator password.</p>
+            </div>
+          </header>
+          <div class="content">
+            <form id="pwForm" style="max-width:420px;">
+              <div class="alert" id="pwErr" hidden></div>
+              <div class="field"><label for="pwCur">Current password</label><input class="input" id="pwCur" type="password" autocomplete="current-password" /></div>
+              <div class="field"><label for="pwNew">New password</label><input class="input" id="pwNew" type="password" autocomplete="new-password" /><div class="hint">Minimum 8 characters.</div></div>
+              <button class="btn" type="submit">Update password</button>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toasts"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>
