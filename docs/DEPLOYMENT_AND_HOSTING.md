@@ -55,23 +55,26 @@ node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 
 ## 4. Vercel
 
-Vercel is serverless, so the Express app must be exposed as a function.
+Vercel is serverless, so the Express app is exposed as a function. `vercel.json` and
+the serverless handler at the bottom of `server/index.js` are already in this repo —
+the handler lazily awaits `initStore()` + `ensureSeed()` on first invocation (a plain
+`module.exports.default = app` would leave the store uninitialised and every request
+would 500).
 
-Create `vercel.json` in the project root:
-```json
-{
-  "version": 2,
-  "builds": [{ "src": "server/index.js", "use": "@vercel/node" }],
-  "routes": [{ "src": "/(.*)", "dest": "server/index.js" }]
-}
-```
-Then add to the very end of `server/index.js`:
-```js
-module.exports.default = app;   // Vercel serverless handler
-```
-Deploy with `npx vercel --prod`, and add the environment variables in the Vercel dashboard.
+**`MONGODB_URI` is not optional here** — the JSON file store cannot survive a
+serverless filesystem, which is wiped between invocations.
 
-⚠️ On Vercel the filesystem is read-only — **you must** use Cloudinary/S3 for uploads (§6).
+1. `npx vercel --prod` from the project root (or connect the GitHub repo in the
+   Vercel dashboard — same idea as Render, "Import Project").
+2. Add the same environment variables as §2 (`MONGODB_URI`, `JWT_SECRET`,
+   `ADMIN_USERNAME`, `ADMIN_PASSWORD`) in **Project → Settings → Environment Variables**.
+3. Redeploy after adding variables (Vercel doesn't hot-reload env changes into a
+   already-built deployment).
+
+⚠️ On Vercel the filesystem is read-only — the **"Upload image" buttons in the
+Admin CMS will fail.** Use option A from §6 instead: paste a direct image URL
+(including a Google Drive "anyone with the link" URL) into the logo/ad fields —
+the CMS stores whatever URL you give it, upload is just a convenience.
 
 ---
 

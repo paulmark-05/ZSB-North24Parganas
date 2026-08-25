@@ -56,3 +56,19 @@ async function start() {
 if (require.main === module) start();
 
 module.exports = { app, start };
+
+/**
+ * Serverless handler (Vercel). `start()` never runs here — the platform owns
+ * the HTTP server — so the store must be initialised lazily, once, before the
+ * first request is handled. The cached promise is reused across warm
+ * invocations of the same function instance.
+ */
+let readyPromise = null;
+function ready() {
+  if (!readyPromise) readyPromise = initStore().then(() => ensureSeed());
+  return readyPromise;
+}
+module.exports.default = async (req, res) => {
+  await ready();
+  return app(req, res);
+};
