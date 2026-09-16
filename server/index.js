@@ -12,6 +12,10 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 
+// Render, Vercel and most hosts sit the app behind a reverse proxy — trust its
+// X-Forwarded-For so express-rate-limit sees the real client IP.
+app.set('trust proxy', 1);
+
 app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
