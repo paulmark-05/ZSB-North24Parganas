@@ -33,7 +33,7 @@
     }
     // Duplicate the sequence once so the -50% translate loops seamlessly.
     const seq = notices
-      .map((n) => `<span class="item">${esc(n.text)}</span><span class="item sep">•</span>`)
+      .map((n) => `<span class="item">${formatText(n.text)}</span><span class="item sep">•</span>`)
       .join('');
     track.innerHTML = seq + seq;
     track.style.setProperty('--speed', Math.max(12, Number(speed) || 24) + 's');
@@ -90,7 +90,7 @@
         <div class="foot">
           <div class="foot-text">
             <strong>${esc(ad.name || 'Advertisement')}</strong>
-            ${ad.description ? `<span class="desc">${esc(ad.description)}</span>` : ''}
+            ${ad.description ? `<span class="desc">${formatText(ad.description)}</span>` : ''}
           </div>
         </div>
       </button>`;

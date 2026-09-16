@@ -105,6 +105,42 @@
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
     );
 
+  /**
+   * Turns a tiny, admin-typed markup subset into safe HTML: **bold**,
+   * *italic*, ++underline++. Escapes the raw text FIRST, then only ever
+   * inserts our own hardcoded tags around already-escaped content — so
+   * there's no way for stored text to introduce real markup or attributes.
+   * Pair with CSS `white-space: pre-line` wherever the result is inserted
+   * so line breaks the admin typed (Enter) are preserved too.
+   */
+  window.formatText = (s) =>
+    esc(s)
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\+\+(.+?)\+\+/g, '<u>$1</u>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  /**
+   * Wires a row of B / I / U buttons (data-fmt="bold|italic|underline") to
+   * wrap the target textarea's current selection in the matching markers,
+   * or insert them at the cursor with placeholder text if nothing is
+   * selected. Fires an `input` event afterward so any live preview updates.
+   */
+  window.wireFormatToolbar = (toolbarEl, textareaEl) => {
+    const marks = { bold: '**', italic: '*', underline: '++' };
+    toolbarEl.querySelectorAll('.fmt-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const mark = marks[btn.dataset.fmt];
+        if (!mark) return;
+        const { selectionStart: start, selectionEnd: end, value } = textareaEl;
+        const selected = value.slice(start, end) || 'text';
+        textareaEl.value = value.slice(0, start) + mark + selected + mark + value.slice(end);
+        textareaEl.focus();
+        textareaEl.setSelectionRange(start + mark.length, start + mark.length + selected.length);
+        textareaEl.dispatchEvent(new Event('input'));
+      });
+    });
+  };
+
   window.toast = function (msg, kind) {
     const wrap = document.getElementById('toasts');
     if (!wrap) return alert(msg);
