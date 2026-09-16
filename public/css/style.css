@@ -167,9 +167,15 @@ button, input, select, textarea { font-family: inherit; font-size: 15px; }
 }
 
 /* ---------- ad ---------- */
-/* Single column: the list mixes vendor-style rows and poster cards, so a
-   multi-column grid would break the manual top-to-bottom order visually. */
-.ad-list { display: flex; flex-direction: column; gap: 12px; }
+/* Bento-style adaptive grid: a single entry takes the full row (looks like
+   a featured hero), and additional entries tile into columns as they're
+   added — no layout changes needed as the section grows. */
+.ad-list {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px; align-items: start;
+}
+.ad-list.single-item .ad .banner { height: 320px; }
+.ad-list.single-item .ad .foot strong { font-size: 17px; }
 
 .ad {
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
@@ -204,7 +210,7 @@ button, input, select, textarea { font-family: inherit; font-size: 15px; }
 }
 .modal-backdrop[hidden] { display: none; }
 .modal {
-  background: var(--surface); border-radius: 16px; max-width: 400px; width: 100%;
+  background: var(--surface); border-radius: 16px; max-width: 520px; width: 100%;
   box-shadow: 0 24px 60px rgba(11, 37, 69, .35); overflow: hidden;
   animation: pop .18s ease-out;
 }
@@ -212,6 +218,16 @@ button, input, select, textarea { font-family: inherit; font-size: 15px; }
 .modal .head { background: var(--navy); color: #fff; padding: 16px 20px; font-weight: 800; font-size: 15.5px; }
 .modal .body { padding: 20px; }
 .modal .body p { margin: 0 0 12px; font-size: 14px; color: var(--muted); line-height: 1.6; }
+.link-preview {
+  position: relative; height: 240px; border-radius: 10px; overflow: hidden;
+  border: 1px solid var(--line); background: var(--blue-50); margin-bottom: 14px;
+}
+.link-preview iframe { width: 100%; height: 100%; border: 0; display: block; background: #fff; }
+.link-preview .preview-note {
+  position: absolute; left: 8px; right: 8px; bottom: 8px; pointer-events: none;
+  font-size: 10.5px; font-weight: 600; color: var(--muted-2); background: rgba(255,255,255,.9);
+  padding: 5px 8px; border-radius: 6px; text-align: center;
+}
 .modal .url {
   font: 600 12.5px/1.4 ui-monospace, monospace; color: var(--navy);
   background: var(--blue-50); border: 1px solid var(--blue-100);
@@ -320,6 +336,10 @@ button, input, select, textarea { font-family: inherit; font-size: 15px; }
 @media (max-width: 860px) { .admin-wrap { grid-template-columns: 1fr; } }
 
 .side { display: flex; flex-direction: column; gap: 4px; }
+@media (min-width: 861px) {
+  /* Keep the nav in view while a long panel (notices, ads) scrolls underneath. */
+  .side { position: sticky; top: 64px; align-self: start; max-height: calc(100vh - 84px); overflow-y: auto; }
+}
 @media (max-width: 860px) {
   .side { flex-direction: row; overflow-x: auto; gap: 6px; padding-bottom: 6px; -webkit-overflow-scrolling: touch; }
   .side::-webkit-scrollbar { display: none; }

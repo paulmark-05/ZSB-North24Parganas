@@ -7,6 +7,7 @@
   let editingAdId = null;
   let adImageUrl = '';
   let logoUrl = '';
+  let dragInProgress = false;
 
   const showErr = (id, msg) => {
     const el = $(id);
@@ -401,11 +402,13 @@
     $$('.draggable-rec', el).forEach((row) => {
       row.addEventListener('dragstart', () => {
         draggedEl = row;
+        dragInProgress = true;
         row.classList.add('dragging');
       });
       row.addEventListener('dragend', () => {
         row.classList.remove('dragging');
         draggedEl = null;
+        dragInProgress = false;
       });
       row.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -500,12 +503,27 @@
   });
 
   /* ============================ BOOT ============================ */
+  // Same portable "poll instead of push" approach as the public page (no
+  // persistent-socket infra on serverless hosting). Skipped while a form is
+  // open or a drag is in progress so it never clobbers an in-progress edit.
+  let pollTimer = null;
+  function startLivePolling() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(() => {
+      if (appView.hidden || dragInProgress) return;
+      if (!$('#noticeForm').hidden || !$('#adForm').hidden) return;
+      loadNotices().catch(() => {});
+      loadAds().catch(() => {});
+    }, 8000);
+  }
+
   async function boot(user) {
     loginView.style.display = 'none';
     appView.hidden = false;
     $('#who').textContent = 'Signed in as ' + (user.displayName || user.username);
     try {
       await Promise.all([loadNotices(), loadLinks(), loadAds(), loadSettings()]);
+      startLivePolling();
     } catch (err) {
       toast(err.message, 'err');
     }
