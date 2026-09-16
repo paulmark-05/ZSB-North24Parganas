@@ -99,6 +99,7 @@
       return;
     }
     $('#adSection').hidden = false;
+    $('#ads').classList.toggle('single-item', list.length === 1);
     $('#ads').innerHTML = list.map(adCard).join('');
 
     $$('#ads .ad').forEach((btn) => {
@@ -120,9 +121,14 @@
     $('#mTitle').textContent = title;
     $('#mText').textContent = text || 'You are about to leave this portal.';
     $('#mUrl').textContent = url;
+    $('#mPreview').src = url; // live preview of the destination before continuing
     modal.hidden = false;
   }
-  function closeModal() { modal.hidden = true; pendingUrl = null; }
+  function closeModal() {
+    modal.hidden = true;
+    pendingUrl = null;
+    $('#mPreview').src = 'about:blank'; // stop the embedded page running in the background
+  }
 
   $('#mCancel').addEventListener('click', closeModal);
   $('#mGo').addEventListener('click', () => {
@@ -132,18 +138,32 @@
   modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
 
-  /* ----------------------------- boot ----------------------------- */
-  API.get('/content')
-    .then(({ data }) => {
+  /* ----------------------------- boot + live polling ----------------------------- */
+  // No WebSocket infra here (the app runs on serverless hosting, where a persistent
+  // socket connection isn't reliable) — polling for changes is the portable
+  // equivalent, so admin edits show up here without a manual refresh.
+  let lastSnapshot = null;
+  async function loadContent(isFirstLoad) {
+    try {
+      const { data } = await API.get('/content');
+      const snapshot = JSON.stringify(data);
+      if (snapshot === lastSnapshot) return; // nothing changed — skip the re-render
+      lastSnapshot = snapshot;
       applyTheme(data.settings.theme);
       renderHeader(data.settings);
       renderNotices(data.notices, data.settings.marqueeSpeed);
       renderCards(data.links);
       renderAds(data.ads);
-    })
-    .catch((err) => {
-      $('#marquee').classList.add('empty');
-      $('#marquee').innerHTML = 'Unable to load content — ' + esc(err.message);
-      toast(err.message, 'err');
-    });
+    } catch (err) {
+      if (isFirstLoad) {
+        $('#marquee').classList.add('empty');
+        $('#marquee').innerHTML = 'Unable to load content — ' + esc(err.message);
+        toast(err.message, 'err');
+      }
+      // on later polls, fail quietly — a dropped poll shouldn't spam toasts
+    }
+  }
+
+  loadContent(true);
+  setInterval(() => loadContent(false), 8000);
 })();
