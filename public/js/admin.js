@@ -268,9 +268,14 @@
   }
   $$('input[name="adKind"]').forEach((r) => r.addEventListener('change', adKindUI));
 
-  function openAdForm(ad) {
+  function adImageToggleUI() {
+    $('#fPosterImage').hidden = !$('#adHasImage').checked;
+  }
+  $('#adHasImage').addEventListener('change', adImageToggleUI);
+
+  function openAdModal(ad) {
     editingAdId = ad ? ad.id : null;
-    $('#adForm').hidden = false;
+    $('#adModalTitle').textContent = ad ? 'Edit advertisement' : 'New advertisement';
     showErr('#adErr', '');
 
     const kind = ad ? ad.kind || 'poster' : 'poster';
@@ -278,6 +283,7 @@
 
     $('#adName2').value = ad ? ad.name : '';
     $('#adCaption').value = ad ? ad.caption || '' : 'Advertisement';
+    $('#adDescription').value = ad ? ad.description || '' : '';
     $('#adCategory').value = ad ? ad.category || '' : '';
     $('#adLocation').value = ad ? ad.location || '' : '';
     $('#adPhone').value = ad ? ad.phone || '' : '';
@@ -288,17 +294,23 @@
 
     $('#adEnabled').checked = ad ? ad.active !== false : true;
     adImageUrl = ad ? ad.imageUrl || '' : '';
+    $('#adHasImage').checked = ad ? !!adImageUrl : true;
     paintAdPreview();
     adLinkTypeUI();
     adKindUI();
-    $('#adForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    adImageToggleUI();
+    $('#adModal').hidden = false;
   }
 
-  $('#newAd').addEventListener('click', () => openAdForm(null));
-  $('#cancelAd').addEventListener('click', () => {
-    $('#adForm').hidden = true;
+  function closeAdModal() {
+    $('#adModal').hidden = true;
     editingAdId = null;
-  });
+  }
+
+  $('#newAd').addEventListener('click', () => openAdModal(null));
+  $('#cancelAd').addEventListener('click', closeAdModal);
+  $('#adModal').addEventListener('click', (e) => { if (e.target === $('#adModal')) closeAdModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#adModal').hidden) closeAdModal(); });
 
   $('#adPick').addEventListener('click', () => $('#adFile').click());
   $('#adFile').addEventListener('change', async (e) => {
@@ -325,9 +337,10 @@
       body.phone = $('#adPhone').value;
     } else {
       body.caption = $('#adCaption').value;
+      body.description = $('#adDescription').value;
       body.linkType = ($$('input[name="adLinkType"]:checked')[0] || {}).value || 'website';
       body.link = $('#adLink').value;
-      body.imageUrl = adImageUrl;
+      body.imageUrl = $('#adHasImage').checked ? adImageUrl : '';
     }
     const isNew = !editingAdId;
     try {
@@ -335,8 +348,7 @@
         isNew ? API.post('/ads', body) : API.put('/ads/' + editingAdId, body)
       );
       toast('Advertisement saved.', 'ok');
-      $('#adForm').hidden = true;
-      editingAdId = null;
+      closeAdModal();
       loadAds();
     } catch (err) { showErr('#adErr', err.message); }
   });
@@ -377,7 +389,7 @@
       b.addEventListener('click', async () => {
         const a = data.find((x) => x.id === b.dataset.id);
         try {
-          if (b.dataset.act === 'edit') return openAdForm(a);
+          if (b.dataset.act === 'edit') return openAdModal(a);
           if (b.dataset.act === 'toggle') { await API.patch('/ads/' + a.id + '/toggle'); toast('Ad updated.', 'ok'); }
           if (b.dataset.act === 'del') {
             if (!confirm(`Delete “${a.name}”?`)) return;
@@ -511,7 +523,7 @@
     if (pollTimer) clearInterval(pollTimer);
     pollTimer = setInterval(() => {
       if (appView.hidden || dragInProgress) return;
-      if (!$('#noticeForm').hidden || !$('#adForm').hidden) return;
+      if (!$('#noticeForm').hidden || !$('#adModal').hidden) return;
       loadNotices().catch(() => {});
       loadAds().catch(() => {});
     }, 8000);

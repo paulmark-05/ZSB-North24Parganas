@@ -81,6 +81,7 @@ const AdSchema = new Schema(
     category: { type: String, default: '' },
     // poster fields
     caption: { type: String, default: 'Advertisement' },
+    description: { type: String, default: '' },
     imageUrl: { type: String, default: '' },
     linkType: { type: String, enum: ['website', 'drive'], default: 'website' },
     link: { type: String, default: '' },

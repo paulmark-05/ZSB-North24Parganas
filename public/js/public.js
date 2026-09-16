@@ -86,7 +86,10 @@
       <button class="ad" type="button" data-id="${esc(ad.id)}">
         <div class="banner">${ad.imageUrl ? `<img src="${esc(ad.imageUrl)}" alt="${esc(ad.name)}" />` : 'ADVERTISEMENT'}</div>
         <div class="foot">
-          <strong>${esc(ad.name || 'Advertisement')}</strong>
+          <div class="foot-text">
+            <strong>${esc(ad.name || 'Advertisement')}</strong>
+            ${ad.description ? `<span class="desc">${esc(ad.description)}</span>` : ''}
+          </div>
           <span class="pill">${esc(ad.caption || 'Ad')}</span>
         </div>
       </button>`;

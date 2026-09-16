@@ -180,64 +180,6 @@
             <div class="right"><button class="btn sm" id="newAd" type="button">+ New ad</button></div>
           </header>
           <div class="content">
-            <form id="adForm" hidden>
-              <div class="alert" id="adErr" hidden></div>
-
-              <div class="field">
-                <label>Type</label>
-                <div class="inline">
-                  <label class="radio-opt"><input type="radio" name="adKind" value="poster" checked /> Poster ad (image + link)</label>
-                  <label class="radio-opt"><input type="radio" name="adKind" value="listing" /> Listing (name + phone/location)</label>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="field"><label for="adName2" id="adNameLabel">Business name</label><input class="input" id="adName2" placeholder="e.g. Veer Motors" /></div>
-                <div class="field" id="fCaption"><label for="adCaption">Caption / label</label><input class="input" id="adCaption" placeholder="Advertisement" /></div>
-                <div class="field" id="fCategory" hidden><label for="adCategory">Category</label><input class="input" id="adCategory" placeholder="e.g. Documentation" /></div>
-              </div>
-
-              <div class="row" id="fListingFields" hidden>
-                <div class="field"><label for="adLocation">Location</label><input class="input" id="adLocation" placeholder="e.g. Gate No. 1" /></div>
-                <div class="field"><label for="adPhone">Phone</label><input class="input" id="adPhone" placeholder="e.g. 9876543210" /></div>
-              </div>
-
-              <div id="fPosterFields">
-                <div class="field">
-                  <label>Link type</label>
-                  <div class="inline">
-                    <label class="radio-opt"><input type="radio" name="adLinkType" value="website" checked /> Website</label>
-                    <label class="radio-opt"><input type="radio" name="adLinkType" value="drive" /> Google Drive</label>
-                  </div>
-                </div>
-                <div class="field">
-                  <label for="adLink" id="adLinkLabel">Website URL (opens when the ad is clicked)</label>
-                  <input class="input" id="adLink" placeholder="https://…" />
-                  <div class="hint" id="adLinkHint">Any http(s) link — the advertiser's own website, landing page, etc.</div>
-                </div>
-                <div class="field">
-                  <label>Poster image</label>
-                  <div class="inline">
-                    <div class="ad" style="max-width:260px;cursor:default;">
-                      <div class="banner" id="adPreview">POSTER PLACEHOLDER</div>
-                    </div>
-                    <div class="stack">
-                      <input type="file" id="adFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden />
-                      <button class="btn ghost sm" type="button" id="adPick">Upload image</button>
-                      <button class="btn ghost sm" type="button" id="adClear">Remove image</button>
-                    </div>
-                  </div>
-                  <div class="hint">PNG, JPG, WEBP or SVG — any size or resolution. It's automatically resized before upload.</div>
-                </div>
-              </div>
-
-              <div class="field"><label class="switch"><span>Show on public site  </span><input type="checkbox" id="adEnabled" checked /><span class="slot"></span></label></div>
-              <div class="inline">
-                <button class="btn" type="submit">Save advertisement</button>
-                <button class="btn ghost" id="cancelAd" type="button">Cancel</button>
-              </div>
-              <div class="divider"></div>
-            </form>
             <div class="hint" id="adListHint" style="margin-bottom:10px;">Drag a row by its ⠿ handle to reorder.</div>
             <div id="adList"></div>
           </div>
@@ -324,6 +266,79 @@
     <div class="loading-box">
       <div class="spinner"></div>
       <p id="loadingText">Working…</p>
+    </div>
+  </div>
+
+  <!-- New / edit advertisement modal -->
+  <div class="modal-backdrop" id="adModal" hidden>
+    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="adModalTitle">
+      <div class="head" id="adModalTitle">New advertisement</div>
+      <div class="body">
+        <form id="adForm">
+          <div class="alert" id="adErr" hidden></div>
+
+          <div class="field">
+            <label>Type</label>
+            <div class="inline">
+              <label class="radio-opt"><input type="radio" name="adKind" value="poster" checked /> Poster ad (image + link)</label>
+              <label class="radio-opt"><input type="radio" name="adKind" value="listing" /> Listing (name + phone/location)</label>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field"><label for="adName2" id="adNameLabel">Business name</label><input class="input" id="adName2" placeholder="e.g. Veer Motors" /></div>
+            <div class="field" id="fCaption"><label for="adCaption">Caption / label</label><input class="input" id="adCaption" placeholder="Advertisement" /></div>
+            <div class="field" id="fCategory" hidden><label for="adCategory">Category</label><input class="input" id="adCategory" placeholder="e.g. Documentation" /></div>
+          </div>
+
+          <div class="row" id="fListingFields" hidden>
+            <div class="field"><label for="adLocation">Location</label><input class="input" id="adLocation" placeholder="e.g. Gate No. 1" /></div>
+            <div class="field"><label for="adPhone">Phone</label><input class="input" id="adPhone" placeholder="e.g. 9876543210" /></div>
+          </div>
+
+          <div id="fPosterFields">
+            <div class="field">
+              <label for="adDescription">Description <span class="muted">(optional, 1–2 lines)</span></label>
+              <textarea class="textarea" id="adDescription" maxlength="200" rows="2" placeholder="A short line about the offer, event or business…"></textarea>
+            </div>
+            <div class="field">
+              <label>Link type</label>
+              <div class="inline">
+                <label class="radio-opt"><input type="radio" name="adLinkType" value="website" checked /> Website</label>
+                <label class="radio-opt"><input type="radio" name="adLinkType" value="drive" /> Google Drive</label>
+              </div>
+            </div>
+            <div class="field">
+              <label for="adLink" id="adLinkLabel">Website URL (opens when the ad is clicked)</label>
+              <input class="input" id="adLink" placeholder="https://…" />
+              <div class="hint" id="adLinkHint">Any http(s) link — the advertiser's own website, landing page, etc.</div>
+            </div>
+            <div class="field">
+              <label class="switch"><span>Include a poster image  </span><input type="checkbox" id="adHasImage" checked /><span class="slot"></span></label>
+            </div>
+            <div class="field" id="fPosterImage">
+              <label>Poster image</label>
+              <div class="inline">
+                <div class="ad" style="max-width:260px;cursor:default;">
+                  <div class="banner" id="adPreview">POSTER PLACEHOLDER</div>
+                </div>
+                <div class="stack">
+                  <input type="file" id="adFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden />
+                  <button class="btn ghost sm" type="button" id="adPick">Upload image</button>
+                  <button class="btn ghost sm" type="button" id="adClear">Remove image</button>
+                </div>
+              </div>
+              <div class="hint">PNG, JPG, WEBP or SVG — any size or resolution. It's automatically resized before upload.</div>
+            </div>
+          </div>
+
+          <div class="field"><label class="switch"><span>Show on public site  </span><input type="checkbox" id="adEnabled" checked /><span class="slot"></span></label></div>
+          <div class="inline">
+            <button class="btn" type="submit">Save advertisement</button>
+            <button class="btn ghost" id="cancelAd" type="button">Cancel</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
