@@ -75,10 +75,13 @@ button, input, select, textarea { font-family: inherit; font-size: 15px; }
   display: flex; align-items: center; gap: 13px; padding: 13px 16px;
 }
 .logo {
-  height: 54px; width: auto; flex: none;
+  height: 54px; width: auto; max-width: 140px; flex: none;
   display: flex; align-items: center; justify-content: center;
+  /* Never clip the logo — shields, crests and other non-square marks keep
+     their real outline instead of being cropped into a circle/square. */
+  border-radius: 0; overflow: visible;
 }
-.logo img { height: 100%; width: auto; object-fit: contain; display: block; }
+.logo img { height: 100%; width: auto; max-width: 140px; object-fit: contain; display: block; }
 .logo .ph { font: 700 9px/1 ui-monospace, monospace; color: var(--muted-2); letter-spacing: .08em; }
 .brand h1 { margin: 0; font-size: 17px; font-weight: 800; color: var(--navy); letter-spacing: .01em; line-height: 1.25; }
 .brand p { margin: 2px 0 0; font-size: 12.5px; color: var(--muted); font-weight: 600; }
@@ -216,6 +219,25 @@ button, input, select, textarea { font-family: inherit; font-size: 15px; }
 }
 .modal .actions { display: flex; gap: 10px; }
 .modal .actions .btn { flex: 1; justify-content: center; }
+
+/* ---------- busy overlay (uploads, saves) ---------- */
+.loading-overlay {
+  position: fixed; inset: 0; background: rgba(11, 37, 69, .55); backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center; z-index: 300;
+}
+.loading-overlay[hidden] { display: none; }
+.loading-box {
+  background: var(--surface); border-radius: 14px; padding: 28px 34px;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  box-shadow: 0 24px 60px rgba(11, 37, 69, .35); animation: pop .18s ease-out;
+}
+.loading-box p { margin: 0; font-size: 14px; font-weight: 700; color: var(--navy); }
+.spinner {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 3px solid var(--blue-100); border-top-color: var(--blue);
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ---------- buttons ---------- */
 .btn {

@@ -269,7 +269,7 @@
                     <button class="btn ghost sm" type="button" id="logoClear">Remove logo</button>
                   </div>
                 </div>
-                <div class="hint">Square image works best (e.g. 512 × 512).</div>
+                <div class="hint">Any shape works — a shield, crest or badge keeps its real outline; it is never cropped into a circle or square.</div>
               </div>
 
               <div class="field">
@@ -318,6 +318,14 @@
   </div>
 
   <div class="toast-wrap" id="toasts"></div>
+
+  <!-- Busy overlay for uploads and saves -->
+  <div class="loading-overlay" id="loadingOverlay" hidden>
+    <div class="loading-box">
+      <div class="spinner"></div>
+      <p id="loadingText">Working…</p>
+    </div>
+  </div>
 
   <script src="/js/api.js"></script>
   <script src="/js/admin.js"></script>

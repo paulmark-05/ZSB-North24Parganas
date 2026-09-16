@@ -10,7 +10,7 @@ A mobile-responsive public portal for the Zila Sainik Board, with a password-pro
 | Red | `#c8102e` | Accent bar, "Notice" tag, destructive actions |
 | Light blue | `#2e7fd4` | Links, service card accent, focus rings |
 
-Light (non-dark) surfaces throughout: `#ffffff` cards on an `#f4f7fb` page. Circular logo placeholder top-left; admin can upload a replacement. All three colours are editable in the CMS.
+Light (non-dark) surfaces throughout: `#ffffff` cards on an `#f4f7fb` page. Logo placeholder top-left; admin can upload a replacement of any shape (a shield or crest keeps its real outline, never cropped to a circle). All three colours are editable in the CMS.
 
 ## 3. Public page — components
 1. **Header** — logo, organisation name, district subtitle, tricolour bar.

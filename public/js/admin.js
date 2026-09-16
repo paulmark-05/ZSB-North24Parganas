@@ -14,6 +14,23 @@
     el.hidden = !msg;
   };
 
+  /* ==================== BUSY OVERLAY (uploads, saves) ==================== */
+  function showLoading(text) {
+    $('#loadingText').textContent = text || 'Working…';
+    $('#loadingOverlay').hidden = false;
+  }
+  function hideLoading() {
+    $('#loadingOverlay').hidden = true;
+  }
+  async function withLoading(text, fn) {
+    showLoading(text);
+    try {
+      return await fn();
+    } finally {
+      hideLoading();
+    }
+  }
+
   /* ============================ AUTH ============================ */
   window.onUnauthorized = () => {
     appView.hidden = true;
@@ -287,7 +304,7 @@
     const f = e.target.files[0];
     if (!f) return;
     try {
-      const r = await API.upload(f);
+      const r = await withLoading('Uploading image…', () => API.upload(f));
       adImageUrl = r.data.url;
       paintAdPreview();
       toast('Image uploaded. Remember to save.', 'ok');
@@ -311,9 +328,11 @@
       body.link = $('#adLink').value;
       body.imageUrl = adImageUrl;
     }
+    const isNew = !editingAdId;
     try {
-      if (editingAdId) await API.put('/ads/' + editingAdId, body);
-      else await API.post('/ads', body);
+      await withLoading(isNew ? 'Publishing advertisement…' : 'Updating advertisement…', () =>
+        isNew ? API.post('/ads', body) : API.put('/ads/' + editingAdId, body)
+      );
       toast('Advertisement saved.', 'ok');
       $('#adForm').hidden = true;
       editingAdId = null;
@@ -433,7 +452,7 @@
     const f = e.target.files[0];
     if (!f) return;
     try {
-      const r = await API.upload(f);
+      const r = await withLoading('Uploading logo…', () => API.upload(f));
       logoUrl = r.data.url;
       paintLogo();
       toast('Logo uploaded. Remember to save.', 'ok');
