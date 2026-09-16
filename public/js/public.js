@@ -82,9 +82,11 @@
           ${ad.phone ? `<a class="tel" href="tel:${esc(ad.phone)}">📞 ${esc(ad.phone)}</a>` : ''}
         </div>`;
     }
+    // No poster image: skip the banner placeholder entirely and render a
+    // compact, text-only card — a headline + description, no empty box.
     return `
-      <button class="ad" type="button" data-id="${esc(ad.id)}">
-        <div class="banner">${ad.imageUrl ? `<img src="${esc(ad.imageUrl)}" alt="${esc(ad.name)}" />` : 'ADVERTISEMENT'}</div>
+      <button class="ad ${ad.imageUrl ? '' : 'ad-textonly'}" type="button" data-id="${esc(ad.id)}">
+        ${ad.imageUrl ? `<div class="banner"><img src="${esc(ad.imageUrl)}" alt="${esc(ad.name)}" /></div>` : ''}
         <div class="foot">
           <div class="foot-text">
             <strong>${esc(ad.name || 'Advertisement')}</strong>

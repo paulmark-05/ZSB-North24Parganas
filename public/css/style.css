@@ -198,6 +198,16 @@ button, input, select, textarea { font-family: inherit; font-size: 15px; }
   color: var(--red); background: #fdeaed; padding: 5px 9px; border-radius: 6px;
 }
 
+/* No poster image: a compact headline card instead of an empty banner box. */
+.ad.ad-textonly { position: relative; }
+.ad.ad-textonly::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--red); }
+.ad.ad-textonly .foot { padding: 18px 20px 18px 24px; align-items: center; }
+.ad.ad-textonly .foot strong { font-size: 16px; }
+.ad.ad-textonly .foot .desc { font-size: 13px; margin-top: 4px; }
+.ad-list.single-item .ad.ad-textonly .foot { padding: 28px 30px 28px 34px; }
+.ad-list.single-item .ad.ad-textonly .foot strong { font-size: 21px; }
+.ad-list.single-item .ad.ad-textonly .foot .desc { font-size: 14.5px; margin-top: 6px; }
+
 /* ---------- footer ---------- */
 .site-footer {
   margin-top: 34px; padding: 22px 16px; text-align: center;
