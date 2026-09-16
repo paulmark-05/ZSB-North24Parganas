@@ -33,7 +33,7 @@ npm test     # 42 endpoint tests, all green
 | **Notice banner** | Queue of notices, each with its own date window and auto-expiry. Four types: counters 1–7 closed · Secretary unavailable · Office closed (occasion) · custom. The server composes the wording; the CMS shows a live preview. |
 | **VMS & Grievance** | Two cards, each with an admin-editable redirect URL. An in-app confirmation modal shows the destination before opening it. |
 | **Advertisements** | One unified, manually-orderable (drag-and-drop) list. Each entry is either a listing (name/phone/location, tap-to-call) or a poster ad (image + website/Google Drive redirect link, via the same confirmation modal). |
-| **Logo & theme** | Circular logo placeholder with upload, plus all three brand colours and the marquee speed. |
+| **Logo & theme** | Logo placeholder with upload — any shape is preserved (shields/crests aren't cropped to a circle) — plus all three brand colours and the marquee speed. |
 | **Auth** | Real JWT login, bcrypt-hashed password, rate-limited, self-service password change. |
 
 ---
