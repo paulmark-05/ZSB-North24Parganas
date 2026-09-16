@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const sharp = require('sharp');
 const rateLimit = require('express-rate-limit');
 
 const { getStore, DEFAULTS } = require('../store');
@@ -34,13 +35,35 @@ const upload = multer({
   },
 });
 
+/**
+ * Downscales oversized images and re-encodes them at a lossy-but-clean
+ * quality so phone-camera photos (often several MB) don't get stored
+ * at full size. SVGs are vector — nothing to compress — and pass through.
+ */
+async function compressImage(buffer, mimetype) {
+  if (mimetype === 'image/svg+xml') return buffer;
+  try {
+    let img = sharp(buffer).rotate(); // normalise EXIF orientation before resizing
+    const meta = await img.metadata();
+    if (meta.width && meta.width > 1600) {
+      img = img.resize({ width: 1600, withoutEnlargement: true });
+    }
+    if (mimetype === 'image/png') return await img.png({ compressionLevel: 9 }).toBuffer();
+    if (mimetype === 'image/webp') return await img.webp({ quality: 80 }).toBuffer();
+    return await img.jpeg({ quality: 78, mozjpeg: true }).toBuffer();
+  } catch {
+    return buffer; // if it isn't decodable as an image for some reason, store it untouched
+  }
+}
+
 async function saveUpload(file) {
   const ext = (path.extname(file.originalname) || '.png').toLowerCase();
   const filename = `${Date.now()}-${Math.round(Math.random() * 1e6)}${ext}`;
+  const buffer = await compressImage(file.buffer, file.mimetype);
 
   if (USE_BLOB) {
     const { put } = require('@vercel/blob');
-    const blob = await put(filename, file.buffer, {
+    const blob = await put(filename, buffer, {
       access: 'public',
       contentType: file.mimetype,
       addRandomSuffix: false,
@@ -48,7 +71,7 @@ async function saveUpload(file) {
     return blob.url;
   }
 
-  fs.writeFileSync(path.join(UPLOAD_DIR, filename), file.buffer);
+  fs.writeFileSync(path.join(UPLOAD_DIR, filename), buffer);
   return `/uploads/${filename}`;
 }
 
