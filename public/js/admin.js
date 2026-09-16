@@ -15,6 +15,10 @@
     el.hidden = !msg;
   };
 
+  /* ==================== TEXT FORMATTING TOOLBARS ==================== */
+  wireFormatToolbar($('#nCustomToolbar'), $('#nCustom'));
+  wireFormatToolbar($('#adDescriptionToolbar'), $('#adDescription'));
+
   /* ==================== BUSY OVERLAY (uploads, saves) ==================== */
   function showLoading(text) {
     $('#loadingText').textContent = text || 'Working…';
@@ -106,7 +110,7 @@
       }
       try {
         const r = await API.post('/notices/preview', body);
-        $('#nPreview').textContent = r.data.text || '—';
+        $('#nPreview').innerHTML = r.data.text ? formatText(r.data.text) : '—';
       } catch (err) {
         $('#nPreview').innerHTML = '<em>' + esc(err.message) + '</em>';
       }

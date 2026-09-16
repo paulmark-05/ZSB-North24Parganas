@@ -96,7 +96,13 @@
 
               <div class="field" id="fCustom" hidden>
                 <label for="nCustom">Custom message</label>
+                <div class="fmt-toolbar" id="nCustomToolbar">
+                  <button type="button" class="fmt-btn" data-fmt="bold" title="Bold"><b>B</b></button>
+                  <button type="button" class="fmt-btn" data-fmt="italic" title="Italic"><i>I</i></button>
+                  <button type="button" class="fmt-btn" data-fmt="underline" title="Underline"><u>U</u></button>
+                </div>
                 <textarea class="textarea" id="nCustom" placeholder="Type the exact notice text to display…"></textarea>
+                <div class="hint">Select text and click B/I/U to format — shows on the public site, not in this box.</div>
               </div>
 
               <div class="row">
@@ -299,7 +305,13 @@
           <div id="fPosterFields">
             <div class="field">
               <label for="adDescription">Description <span class="muted">(optional, 1–2 lines)</span></label>
+              <div class="fmt-toolbar" id="adDescriptionToolbar">
+                <button type="button" class="fmt-btn" data-fmt="bold" title="Bold"><b>B</b></button>
+                <button type="button" class="fmt-btn" data-fmt="italic" title="Italic"><i>I</i></button>
+                <button type="button" class="fmt-btn" data-fmt="underline" title="Underline"><u>U</u></button>
+              </div>
               <textarea class="textarea" id="adDescription" maxlength="200" rows="2" placeholder="A short line about the offer, event or business…"></textarea>
+              <div class="hint">Press Enter for a line break. Select text and click B/I/U to format — shows on the public site, not in this box.</div>
             </div>
             <div class="field">
               <label>Link type</label>

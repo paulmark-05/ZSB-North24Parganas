@@ -192,7 +192,7 @@ button, input, select, textarea { font-family: inherit; font-size: 15px; }
 .ad .foot { padding: 13px 15px; display: flex; align-items: flex-start; gap: 10px; }
 .ad .foot .foot-text { min-width: 0; flex: 1; }
 .ad .foot strong { display: block; font-size: 14.5px; color: var(--navy); font-weight: 800; }
-.ad .foot .desc { display: block; margin-top: 3px; font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+.ad .foot .desc { display: block; margin-top: 3px; font-size: 12.5px; color: var(--muted); line-height: 1.45; white-space: pre-line; }
 .ad .foot .pill {
   margin-left: auto; flex: none; font-size: 10.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
   color: var(--red); background: #fdeaed; padding: 5px 9px; border-radius: 6px;
@@ -455,6 +455,16 @@ button, input, select, textarea { font-family: inherit; font-size: 15px; }
 .swatches { display: flex; gap: 10px; flex-wrap: wrap; }
 .sw { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 9px; padding: 8px 11px; font-size: 12.5px; font-weight: 700; color: var(--navy); }
 .sw input[type=color] { width: 30px; height: 30px; border: none; background: none; padding: 0; cursor: pointer; }
+
+/* text-formatting toolbar (bold/italic/underline) above a textarea */
+.fmt-toolbar { display: flex; gap: 6px; margin-bottom: 6px; }
+.fmt-btn {
+  width: 30px; height: 28px; border-radius: 6px; border: 1px solid var(--line);
+  background: #fff; color: var(--navy); font-size: 13px; cursor: pointer; padding: 0;
+  display: flex; align-items: center; justify-content: center; transition: all .14s;
+}
+.fmt-btn:hover { background: var(--blue-50); border-color: var(--blue); }
+.fmt-btn u { text-decoration: underline; }
 
 .divider { height: 1px; background: var(--line-soft); margin: 20px 0; }
 .stack { display: flex; flex-direction: column; gap: 10px; }
