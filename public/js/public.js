@@ -92,7 +92,6 @@
             <strong>${esc(ad.name || 'Advertisement')}</strong>
             ${ad.description ? `<span class="desc">${esc(ad.description)}</span>` : ''}
           </div>
-          <span class="pill">${esc(ad.caption || 'Ad')}</span>
         </div>
       </button>`;
   }
