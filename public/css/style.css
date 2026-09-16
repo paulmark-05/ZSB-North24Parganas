@@ -144,8 +144,7 @@ button, input, select, textarea { font-family: inherit; font-size: 15px; }
 .action-card p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
 .action-card .go { margin-left: auto; color: var(--muted-2); font-size: 20px; align-self: center; }
 
-/* ---------- vendors ---------- */
-.vendor-list { display: flex; flex-direction: column; gap: 8px; }
+/* ---------- vendor-style listing row (inside the unified .ad-list) ---------- */
 .vendor {
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm);
   padding: 13px 14px; display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow-sm);
@@ -165,8 +164,9 @@ button, input, select, textarea { font-family: inherit; font-size: 15px; }
 }
 
 /* ---------- ad ---------- */
-.ad-list { display: grid; grid-template-columns: 1fr; gap: 14px; }
-@media (min-width: 640px) { .ad-list { grid-template-columns: 1fr 1fr; } }
+/* Single column: the list mixes vendor-style rows and poster cards, so a
+   multi-column grid would break the manual top-to-bottom order visually. */
+.ad-list { display: flex; flex-direction: column; gap: 12px; }
 
 .ad {
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
@@ -335,6 +335,16 @@ button, input, select, textarea { font-family: inherit; font-size: 15px; }
 .rec .body strong { display: block; font-size: 14px; color: var(--navy); font-weight: 700; line-height: 1.45; }
 .rec .body span { font-size: 12px; color: var(--muted); }
 .rec .acts { display: flex; gap: 6px; flex: none; }
+
+/* draggable reorder rows */
+.draggable-rec { cursor: grab; }
+.draggable-rec.dragging { opacity: .4; }
+.drag-handle {
+  flex: none; color: var(--muted-2); font-size: 16px; cursor: grab; line-height: 1;
+  padding: 2px 4px; user-select: none;
+}
+.badge.listing { background: var(--blue-100); color: var(--blue); }
+.badge.poster { background: #fdeaed; color: var(--red); }
 .badge {
   display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
   padding: 4px 8px; border-radius: 5px; margin-right: 6px;

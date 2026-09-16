@@ -1,6 +1,6 @@
 # Zila Sainik Board — Public Portal + Admin CMS
 
-A mobile-responsive public portal with a password-protected Admin CMS. Staff can edit every piece of public content — the scrolling notice banner, service links, vendors, the ad slot, the logo and the colour theme — without touching code.
+A mobile-responsive public portal with a password-protected Admin CMS. Staff can edit every piece of public content — the scrolling notice banner, service links, the Advertisements section, the logo and the colour theme — without touching code.
 
 **Palette:** Navy `#0b2545` · Red `#c8102e` · Light blue `#2e7fd4` — light, official, non-dark.
 
@@ -21,7 +21,7 @@ npm start
 Runs immediately with **no database** (JSON file store). Set `MONGODB_URI` in `.env` to switch to MongoDB Atlas — no other change needed.
 
 ```bash
-npm test     # 40 endpoint tests, all green
+npm test     # 42 endpoint tests, all green
 ```
 
 ---
@@ -32,8 +32,7 @@ npm test     # 40 endpoint tests, all green
 |---|---|
 | **Notice banner** | Queue of notices, each with its own date window and auto-expiry. Four types: counters 1–7 closed · Secretary unavailable · Office closed (occasion) · custom. The server composes the wording; the CMS shows a live preview. |
 | **VMS & Grievance** | Two cards, each with an admin-editable redirect URL. An in-app confirmation modal shows the destination before opening it. |
-| **Vendors** | Add / edit / hide / remove. Tap-to-call phone numbers. |
-| **Advertisement** | Poster upload + business name + Google Drive link, click-through via the same confirmation modal. |
+| **Advertisements** | One unified, manually-orderable (drag-and-drop) list. Each entry is either a listing (name/phone/location, tap-to-call) or a poster ad (image + website/Google Drive redirect link, via the same confirmation modal). |
 | **Logo & theme** | Circular logo placeholder with upload, plus all three brand colours and the marquee speed. |
 | **Auth** | Real JWT login, bcrypt-hashed password, rate-limited, self-service password change. |
 
@@ -57,7 +56,7 @@ npm test     # 40 endpoint tests, all green
 │   ├── js/api.js           API client + helpers
 │   ├── js/public.js        Public page
 │   └── js/admin.js         CMS
-├── tests/api.test.js       40 endpoint tests
+├── tests/api.test.js       42 endpoint tests
 └── docs/
     ├── MVP_SCOPE.md
     ├── SETUP_AND_TESTING.md

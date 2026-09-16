@@ -152,11 +152,10 @@ router.post('/auth/change-password', requireAuth, async (req, res, next) => {
 router.get('/content', async (_req, res, next) => {
   try {
     const store = getStore();
-    const [settings, links, notices, vendors, ads] = await Promise.all([
+    const [settings, links, notices, ads] = await Promise.all([
       store.getSingleton('settings'),
       store.getSingleton('links'),
       store.list('notices'),
-      store.list('vendors'),
       store.list('ads'),
     ]);
 
@@ -171,7 +170,6 @@ router.get('/content', async (_req, res, next) => {
         settings,
         links,
         notices: liveNotices,
-        vendors: vendors.filter((v) => v.active !== false),
         ads: ads.filter((a) => a.active !== false),
       },
     });
@@ -251,7 +249,9 @@ router.put('/links', requireAuth, async (req, res, next) => {
 });
 
 /* ------------------------------------------------------------------ */
-/* Ads CRUD (multiple ads, like vendors)                                */
+/* Ads CRUD — the unified "Advertisements" section. Each entry is       */
+/* either a `listing` (vendor-style: name/phone/location) or a         */
+/* `poster` (image + redirect link). Both share one manual order.       */
 /* ------------------------------------------------------------------ */
 router.get('/ads', async (_req, res, next) => {
   try {
@@ -262,32 +262,43 @@ router.get('/ads', async (_req, res, next) => {
 });
 
 function adPayload(b = {}) {
-  const businessName = String(b.businessName || '').trim();
-  if (!businessName) return { ok: false, error: 'Business name is required.' };
-  const linkType = b.linkType === 'drive' ? 'drive' : 'website';
-  const link = String(b.link || '').trim();
-  if (link && !isHttpUrl(link)) {
-    return { ok: false, error: 'Ad link must be a valid http(s) URL.' };
-  }
-  return {
-    ok: true,
-    value: {
-      businessName,
-      caption: String(b.caption || '').trim() || 'Advertisement',
-      imageUrl: String(b.imageUrl || '').trim(),
-      linkType,
-      link,
-      active: b.active === undefined ? true : !!b.active,
-      order: Number.isFinite(Number(b.order)) ? Number(b.order) : 0,
-    },
+  const kind = b.kind === 'listing' ? 'listing' : 'poster';
+  const name = String(b.name || '').trim();
+  if (!name) return { ok: false, error: 'Name is required.' };
+
+  const value = {
+    kind,
+    name,
+    active: b.active === undefined ? true : !!b.active,
+    order: Number.isFinite(Number(b.order)) ? Number(b.order) : 0,
+    location: '', phone: '', category: '',
+    caption: 'Advertisement', imageUrl: '', linkType: 'website', link: '',
   };
+
+  if (kind === 'listing') {
+    value.location = String(b.location || '').trim();
+    value.phone = String(b.phone || '').trim();
+    value.category = String(b.category || '').trim();
+  } else {
+    const linkType = b.linkType === 'drive' ? 'drive' : 'website';
+    const link = String(b.link || '').trim();
+    if (link && !isHttpUrl(link)) return { ok: false, error: 'Ad link must be a valid http(s) URL.' };
+    value.caption = String(b.caption || '').trim() || 'Advertisement';
+    value.imageUrl = String(b.imageUrl || '').trim();
+    value.linkType = linkType;
+    value.link = link;
+  }
+
+  return { ok: true, value };
 }
 
 router.post('/ads', requireAuth, async (req, res, next) => {
   try {
     const p = adPayload(req.body);
     if (!p.ok) return res.status(400).json({ ok: false, error: p.error });
-    res.status(201).json({ ok: true, data: await getStore().create('ads', p.value) });
+    const list = await getStore().list('ads');
+    const maxOrder = list.reduce((m, a) => Math.max(m, a.order ?? 0), -1);
+    res.status(201).json({ ok: true, data: await getStore().create('ads', { ...p.value, order: maxOrder + 1 }) });
   } catch (err) {
     next(err);
   }
@@ -312,6 +323,19 @@ router.patch('/ads/:id/toggle', requireAuth, async (req, res, next) => {
     if (!found) return res.status(404).json({ ok: false, error: 'Ad not found.' });
     const updated = await getStore().update('ads', req.params.id, { active: !found.active });
     res.json({ ok: true, data: updated });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Manual reorder — body: { order: [id1, id2, id3, ...] } in the desired sequence.
+router.post('/ads/reorder', requireAuth, async (req, res, next) => {
+  try {
+    const ids = Array.isArray(req.body?.order) ? req.body.order : null;
+    if (!ids || !ids.length) return res.status(400).json({ ok: false, error: 'order must be a non-empty array of ad ids.' });
+    const store = getStore();
+    await Promise.all(ids.map((id, i) => store.update('ads', id, { order: i })));
+    res.json({ ok: true, data: await store.list('ads') });
   } catch (err) {
     next(err);
   }
@@ -391,65 +415,6 @@ router.post('/notices/preview', requireAuth, (req, res) => {
   const { ok, errors, value } = validateNotice(req.body);
   if (!ok) return res.status(400).json({ ok: false, error: errors.join(' '), errors });
   res.json({ ok: true, data: { text: composeNoticeText(value) } });
-});
-
-/* ------------------------------------------------------------------ */
-/* Vendors CRUD                                                        */
-/* ------------------------------------------------------------------ */
-router.get('/vendors', async (_req, res, next) => {
-  try {
-    res.json({ ok: true, data: await getStore().list('vendors') });
-  } catch (err) {
-    next(err);
-  }
-});
-
-function vendorPayload(b = {}) {
-  const name = String(b.name || '').trim();
-  if (!name) return { ok: false, error: 'Vendor name is required.' };
-  return {
-    ok: true,
-    value: {
-      name,
-      location: String(b.location || '').trim(),
-      phone: String(b.phone || '').trim(),
-      category: String(b.category || '').trim(),
-      active: b.active === undefined ? true : !!b.active,
-      order: Number.isFinite(Number(b.order)) ? Number(b.order) : 0,
-    },
-  };
-}
-
-router.post('/vendors', requireAuth, async (req, res, next) => {
-  try {
-    const p = vendorPayload(req.body);
-    if (!p.ok) return res.status(400).json({ ok: false, error: p.error });
-    res.status(201).json({ ok: true, data: await getStore().create('vendors', p.value) });
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.put('/vendors/:id', requireAuth, async (req, res, next) => {
-  try {
-    const p = vendorPayload(req.body);
-    if (!p.ok) return res.status(400).json({ ok: false, error: p.error });
-    const updated = await getStore().update('vendors', req.params.id, p.value);
-    if (!updated) return res.status(404).json({ ok: false, error: 'Vendor not found.' });
-    res.json({ ok: true, data: updated });
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.delete('/vendors/:id', requireAuth, async (req, res, next) => {
-  try {
-    const done = await getStore().remove('vendors', req.params.id);
-    if (!done) return res.status(404).json({ ok: false, error: 'Vendor not found.' });
-    res.json({ ok: true, message: 'Vendor deleted.' });
-  } catch (err) {
-    next(err);
-  }
 });
 
 /* ------------------------------------------------------------------ */

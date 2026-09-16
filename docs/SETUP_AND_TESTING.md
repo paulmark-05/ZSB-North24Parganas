@@ -124,21 +124,17 @@ Sign in at `/admin` and work through this list. Keep the public page open in a s
 | 13 | Enter `abc` as the URL → Save | Inline error: *"VMS link must be a valid http(s) URL."* |
 | 14 | Untick *Show this card* → Save | Card disappears from the public page |
 
-### Advertisement
+### Advertisements (unified listing + poster)
 | # | Action | Expected |
 |---|---|---|
-| 15 | Upload a poster (PNG/JPG) | Preview thumbnail updates immediately |
-| 16 | Set business name + Drive link → Save | Public ad shows the poster and name; clicking opens the confirmation modal, then Drive |
+| 15 | New ad → Type: Poster → upload a poster (PNG/JPG) | Preview thumbnail updates immediately; large images auto-compress on save |
+| 16 | Set business name + website/Drive link → Save | Public entry shows the poster and name; clicking opens the confirmation modal, then the link |
 | 17 | Upload a 10 MB file | Error: file too large (4 MB limit) |
-| 18 | Untick *Show ad* → Save | Whole "Sponsored" section disappears publicly |
-
-### Vendors
-| # | Action | Expected |
-|---|---|---|
-| 19 | Add a vendor with a phone number | Appears publicly; the phone pill is a working `tel:` link on mobile |
-| 20 | Edit → untick *Visible* → Save | Row greys out in admin, disappears publicly |
-| 21 | Save with an empty name | Inline error: *"Vendor name is required."* |
-| 22 | Delete a vendor | Confirmation prompt, then removed from both views |
+| 18 | New ad → Type: Listing → add name + phone number | Appears publicly as a vendor-style row; the phone pill is a working `tel:` link on mobile |
+| 19 | Save either kind with an empty name | Inline error: *"Name is required."* |
+| 20 | Drag a row to a new position | Order persists after reload; public page reflects the same order |
+| 21 | Untick *Show on public site* on any entry | That entry disappears from the public "Advertisements" section only |
+| 22 | Delete an entry | Confirmation prompt, then removed from both views |
 
 ### Logo, theme, account
 | # | Action | Expected |
@@ -146,7 +142,7 @@ Sign in at `/admin` and work through this list. Keep the public page open in a s
 | 23 | Upload a logo → Save | Replaces the circular "LOGO" placeholder in the public header |
 | 24 | Change the three brand colours → Save | Public page restyles on refresh (header, marquee, accents) |
 | 25 | Set banner scroll duration to 40 → Save | Marquee visibly slows down |
-| 26 | **Restore defaults** | Org name, links and ad return to their seeded values |
+| 26 | **Restore defaults** | Org name and links return to their seeded values (Advertisements are unaffected — manage those from their own tab) |
 | 27 | Change the password, sign out, sign in with the new one | Succeeds; the old password now fails |
 | 28 | Wait for the token to expire (or clear `localStorage`) and click anything | Kicked back to the login screen with *"Session expired"* |
 
@@ -198,14 +194,14 @@ curl -X POST http://localhost:4000/api/notices \
 | PUT | `/api/settings` | 🔒 | Update |
 | GET | `/api/links` | 🔓 | VMS + Grievance config |
 | PUT | `/api/links` | 🔒 | Update |
-| GET | `/api/ad` | 🔓 | Ad slot |
-| PUT | `/api/ad` | 🔒 | Update |
-| GET | `/api/vendors` | 🔓 | List |
-| POST | `/api/vendors` | 🔒 | Create |
-| PUT | `/api/vendors/:id` | 🔒 | Update |
-| DELETE | `/api/vendors/:id` | 🔒 | Delete |
-| POST | `/api/upload` | 🔒 | Image upload → `{ url }` |
-| POST | `/api/admin/reset-defaults` | 🔒 | Restore settings/links/ad |
+| GET | `/api/ads` | 🔓 | List all Advertisements entries (listing + poster kinds) |
+| POST | `/api/ads` | 🔒 | Create |
+| PUT | `/api/ads/:id` | 🔒 | Update |
+| PATCH | `/api/ads/:id/toggle` | 🔒 | Enable / disable |
+| POST | `/api/ads/reorder` | 🔒 | Set manual order — body `{ order: [id, id, …] }` |
+| DELETE | `/api/ads/:id` | 🔒 | Delete |
+| POST | `/api/upload` | 🔒 | Image upload → `{ url }` (auto-compressed) |
+| POST | `/api/admin/reset-defaults` | 🔒 | Restore settings/links |
 
 Every response is `{ ok: true, data }` or `{ ok: false, error }`. Unknown `/api/*` paths return a JSON 404 — never an HTML page.
 

@@ -30,16 +30,34 @@ async function ensureSeed() {
     await store.setSingleton(key, { ...structuredClone(DEFAULTS[key]), ...current });
   }
 
-  // Sample vendors (only when empty)
-  const vendors = await store.list('vendors');
-  if (vendors.length === 0) {
-    const samples = [
-      { name: 'Sainik Xerox & Stationery', location: 'Gate No. 1, Near Reception', phone: '9876543210', category: 'Documentation', order: 1 },
-      { name: 'Veer Photo Studio', location: 'Block B, Ground Floor', phone: '9876543211', category: 'Photography', order: 2 },
-      { name: 'Ex-Servicemen Canteen', location: 'Behind Admin Block', phone: '9876543212', category: 'Refreshments', order: 3 },
-    ];
-    for (const v of samples) await store.create('vendors', { active: true, ...v });
-    console.log('[seed] Sample vendors added.');
+  // One-time migration: fold the old standalone "vendors" collection into
+  // the unified "ads" collection (kind: 'listing'). Idempotent — skipped
+  // once at least one listing-kind ad already exists.
+  const existingListings = (await store.list('ads')).filter((a) => a.kind === 'listing');
+  if (existingListings.length === 0) {
+    const oldVendors = await store.list('vendors');
+    if (oldVendors.length > 0) {
+      for (const v of oldVendors) {
+        await store.create('ads', {
+          kind: 'listing',
+          name: v.name,
+          location: v.location || '',
+          phone: v.phone || '',
+          category: v.category || '',
+          active: v.active !== false,
+          order: v.order ?? 0,
+        });
+      }
+      console.log(`[seed] Migrated ${oldVendors.length} vendor(s) into the unified ads collection.`);
+    } else {
+      const samples = [
+        { name: 'Sainik Xerox & Stationery', location: 'Gate No. 1, Near Reception', phone: '9876543210', category: 'Documentation', order: 1 },
+        { name: 'Veer Photo Studio', location: 'Block B, Ground Floor', phone: '9876543211', category: 'Photography', order: 2 },
+        { name: 'Ex-Servicemen Canteen', location: 'Behind Admin Block', phone: '9876543212', category: 'Refreshments', order: 3 },
+      ];
+      for (const s of samples) await store.create('ads', { kind: 'listing', active: true, ...s });
+      console.log('[seed] Sample listings added.');
+    }
   }
 
   // Sample notices (only when empty)

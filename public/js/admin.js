@@ -4,7 +4,6 @@
   const appView = $('#appView');
 
   let editingNoticeId = null;
-  let editingVendorId = null;
   let editingAdId = null;
   let adImageUrl = '';
   let logoUrl = '';
@@ -219,7 +218,7 @@
     } catch (err) { showErr('#linksErr', err.message); }
   });
 
-  /* ============================ ADS ============================ */
+  /* ==================== ADVERTISEMENTS (unified) ==================== */
   function paintAdPreview() {
     $('#adPreview').innerHTML = adImageUrl
       ? `<img src="${esc(adImageUrl)}" alt="poster" />`
@@ -240,19 +239,40 @@
   }
   $$('input[name="adLinkType"]').forEach((r) => r.addEventListener('change', adLinkTypeUI));
 
+  function adKindUI() {
+    const kind = ($$('input[name="adKind"]:checked')[0] || {}).value || 'poster';
+    const isListing = kind === 'listing';
+    $('#adNameLabel').textContent = isListing ? 'Name' : 'Business name';
+    $('#fCaption').hidden = isListing;
+    $('#fCategory').hidden = !isListing;
+    $('#fListingFields').hidden = !isListing;
+    $('#fPosterFields').hidden = isListing;
+  }
+  $$('input[name="adKind"]').forEach((r) => r.addEventListener('change', adKindUI));
+
   function openAdForm(ad) {
     editingAdId = ad ? ad.id : null;
     $('#adForm').hidden = false;
     showErr('#adErr', '');
-    $('#adName2').value = ad ? ad.businessName : '';
+
+    const kind = ad ? ad.kind || 'poster' : 'poster';
+    $$('input[name="adKind"]').forEach((r) => (r.checked = r.value === kind));
+
+    $('#adName2').value = ad ? ad.name : '';
     $('#adCaption').value = ad ? ad.caption || '' : 'Advertisement';
-    const type = ad ? ad.linkType || 'website' : 'website';
-    $$('input[name="adLinkType"]').forEach((r) => (r.checked = r.value === type));
+    $('#adCategory').value = ad ? ad.category || '' : '';
+    $('#adLocation').value = ad ? ad.location || '' : '';
+    $('#adPhone').value = ad ? ad.phone || '' : '';
+
+    const linkType = ad ? ad.linkType || 'website' : 'website';
+    $$('input[name="adLinkType"]').forEach((r) => (r.checked = r.value === linkType));
     $('#adLink').value = ad ? ad.link || '' : '';
+
     $('#adEnabled').checked = ad ? ad.active !== false : true;
     adImageUrl = ad ? ad.imageUrl || '' : '';
     paintAdPreview();
     adLinkTypeUI();
+    adKindUI();
     $('#adForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
@@ -279,14 +299,18 @@
   $('#adForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     showErr('#adErr', '');
-    const body = {
-      businessName: $('#adName2').value,
-      caption: $('#adCaption').value,
-      linkType: ($$('input[name="adLinkType"]:checked')[0] || {}).value || 'website',
-      link: $('#adLink').value,
-      imageUrl: adImageUrl,
-      active: $('#adEnabled').checked,
-    };
+    const kind = ($$('input[name="adKind"]:checked')[0] || {}).value || 'poster';
+    const body = { kind, name: $('#adName2').value, active: $('#adEnabled').checked };
+    if (kind === 'listing') {
+      body.category = $('#adCategory').value;
+      body.location = $('#adLocation').value;
+      body.phone = $('#adPhone').value;
+    } else {
+      body.caption = $('#adCaption').value;
+      body.linkType = ($$('input[name="adLinkType"]:checked')[0] || {}).value || 'website';
+      body.link = $('#adLink').value;
+      body.imageUrl = adImageUrl;
+    }
     try {
       if (editingAdId) await API.put('/ads/' + editingAdId, body);
       else await API.post('/ads', body);
@@ -297,6 +321,11 @@
     } catch (err) { showErr('#adErr', err.message); }
   });
 
+  function adRowMeta(a) {
+    if (a.kind === 'listing') return [a.category, a.location, a.phone].filter(Boolean).join(' · ') || '—';
+    return (a.linkType === 'drive' ? 'Google Drive' : 'Website') + ' · ' + (a.link || 'no link set');
+  }
+
   async function loadAds() {
     const { data } = await API.get('/ads');
     const el = $('#adList');
@@ -306,10 +335,15 @@
     }
     el.innerHTML = data
       .map((a) => `
-        <div class="rec ${a.active ? '' : 'inactive'}">
+        <div class="rec draggable-rec ${a.active ? '' : 'inactive'}" draggable="true" data-id="${a.id}">
+          <span class="drag-handle" title="Drag to reorder">⠿</span>
           <div class="body">
-            <strong>${a.active ? '' : '<span class="badge off">Hidden</span>'}${esc(a.businessName)}</strong>
-            <span>${a.linkType === 'drive' ? 'Google Drive' : 'Website'} · ${esc(a.link || 'no link set')}</span>
+            <strong>
+              ${a.active ? '' : '<span class="badge off">Hidden</span>'}
+              <span class="badge ${a.kind === 'listing' ? 'listing' : 'poster'}">${a.kind === 'listing' ? 'Listing' : 'Poster'}</span>
+              ${esc(a.name)}
+            </strong>
+            <span>${esc(adRowMeta(a))}</span>
           </div>
           <div class="acts">
             <button class="btn ghost sm" data-act="toggle" data-id="${a.id}">${a.active ? 'Disable' : 'Enable'}</button>
@@ -326,7 +360,7 @@
           if (b.dataset.act === 'edit') return openAdForm(a);
           if (b.dataset.act === 'toggle') { await API.patch('/ads/' + a.id + '/toggle'); toast('Ad updated.', 'ok'); }
           if (b.dataset.act === 'del') {
-            if (!confirm(`Delete ad “${a.businessName}”?`)) return;
+            if (!confirm(`Delete “${a.name}”?`)) return;
             await API.del('/ads/' + a.id);
             toast('Ad deleted.', 'ok');
           }
@@ -334,78 +368,43 @@
         } catch (err) { toast(err.message, 'err'); }
       });
     });
+
+    setupDragReorder();
   }
 
-  /* ========================== VENDORS ========================== */
-  function openVendorForm(v) {
-    editingVendorId = v ? v.id : null;
-    $('#vendorForm').hidden = false;
-    showErr('#vendorErr', '');
-    $('#vName').value = v ? v.name : '';
-    $('#vCategory').value = v ? v.category || '' : '';
-    $('#vLocation').value = v ? v.location || '' : '';
-    $('#vPhone').value = v ? v.phone || '' : '';
-    $('#vActive').checked = v ? v.active !== false : true;
-    $('#vendorForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
+  /* Native HTML5 drag-and-drop reordering. Drop position is computed live
+     during dragover so the list visually reflows as you drag, then the
+     final DOM order is persisted in one call. */
+  function setupDragReorder() {
+    const el = $('#adList');
+    let draggedEl = null;
 
-  $('#newVendor').addEventListener('click', () => openVendorForm(null));
-  $('#cancelVendor').addEventListener('click', () => {
-    $('#vendorForm').hidden = true;
-    editingVendorId = null;
-  });
-
-  $('#vendorForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    showErr('#vendorErr', '');
-    const body = {
-      name: $('#vName').value,
-      category: $('#vCategory').value,
-      location: $('#vLocation').value,
-      phone: $('#vPhone').value,
-      active: $('#vActive').checked,
-    };
-    try {
-      if (editingVendorId) await API.put('/vendors/' + editingVendorId, body);
-      else await API.post('/vendors', body);
-      toast('Vendor saved.', 'ok');
-      $('#vendorForm').hidden = true;
-      editingVendorId = null;
-      loadVendors();
-    } catch (err) { showErr('#vendorErr', err.message); }
-  });
-
-  async function loadVendors() {
-    const { data } = await API.get('/vendors');
-    const el = $('#vendorList');
-    if (!data.length) {
-      el.innerHTML = '<div class="empty-state">No vendors yet. Click “New vendor” to add one.</div>';
-      return;
-    }
-    el.innerHTML = data
-      .map((v) => `
-        <div class="rec ${v.active ? '' : 'inactive'}">
-          <div class="body">
-            <strong>${v.active ? '' : '<span class="badge off">Hidden</span>'}${esc(v.name)}</strong>
-            <span>${esc([v.category, v.location, v.phone].filter(Boolean).join(' · ')) || '—'}</span>
-          </div>
-          <div class="acts">
-            <button class="btn ghost sm" data-act="edit" data-id="${v.id}">Edit</button>
-            <button class="btn red sm" data-act="del" data-id="${v.id}">Delete</button>
-          </div>
-        </div>`)
-      .join('');
-
-    $$('#vendorList [data-act]').forEach((b) => {
-      b.addEventListener('click', async () => {
-        const v = data.find((x) => x.id === b.dataset.id);
+    $$('.draggable-rec', el).forEach((row) => {
+      row.addEventListener('dragstart', () => {
+        draggedEl = row;
+        row.classList.add('dragging');
+      });
+      row.addEventListener('dragend', () => {
+        row.classList.remove('dragging');
+        draggedEl = null;
+      });
+      row.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        if (!draggedEl || row === draggedEl) return;
+        const rect = row.getBoundingClientRect();
+        const before = e.clientY - rect.top < rect.height / 2;
+        row.parentNode.insertBefore(draggedEl, before ? row : row.nextSibling);
+      });
+      row.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        const order = $$('.draggable-rec', el).map((r) => r.dataset.id);
         try {
-          if (b.dataset.act === 'edit') return openVendorForm(v);
-          if (!confirm(`Delete vendor “${v.name}”?`)) return;
-          await API.del('/vendors/' + v.id);
-          toast('Vendor deleted.', 'ok');
-          loadVendors();
-        } catch (err) { toast(err.message, 'err'); }
+          await API.post('/ads/reorder', { order });
+          toast('Order saved.', 'ok');
+        } catch (err) {
+          toast(err.message, 'err');
+          loadAds();
+        }
       });
     });
   }
@@ -487,7 +486,7 @@
     appView.hidden = false;
     $('#who').textContent = 'Signed in as ' + (user.displayName || user.username);
     try {
-      await Promise.all([loadNotices(), loadLinks(), loadAds(), loadVendors(), loadSettings()]);
+      await Promise.all([loadNotices(), loadLinks(), loadAds(), loadSettings()]);
     } catch (err) {
       toast(err.message, 'err');
     }
