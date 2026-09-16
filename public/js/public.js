@@ -67,23 +67,29 @@
     });
   }
 
-  function renderVendors(vendors) {
-    const el = $('#vendors');
-    if (!vendors.length) {
-      el.innerHTML = '<div class="empty-state">No vendors listed yet.</div>';
-      return;
-    }
-    el.innerHTML = vendors
-      .map((v) => `
+  /* Unified Advertisements section — each entry is either a `listing`
+     (vendor-style: name/phone/location) or a `poster` (image + link).
+     Rendered in one list, in the admin's manually-set order. */
+  function adCard(ad) {
+    if (ad.kind === 'listing') {
+      return `
         <div class="vendor">
-          <div class="av">${esc((v.name || '?').trim().charAt(0).toUpperCase())}</div>
+          <div class="av">${esc((ad.name || '?').trim().charAt(0).toUpperCase())}</div>
           <div class="meta">
-            <strong>${esc(v.name)}</strong>
-            <span>${esc([v.category, v.location].filter(Boolean).join(' · '))}</span>
+            <strong>${esc(ad.name)}</strong>
+            <span>${esc([ad.category, ad.location].filter(Boolean).join(' · '))}</span>
           </div>
-          ${v.phone ? `<a class="tel" href="tel:${esc(v.phone)}">📞 ${esc(v.phone)}</a>` : ''}
-        </div>`)
-      .join('');
+          ${ad.phone ? `<a class="tel" href="tel:${esc(ad.phone)}">📞 ${esc(ad.phone)}</a>` : ''}
+        </div>`;
+    }
+    return `
+      <button class="ad" type="button" data-id="${esc(ad.id)}">
+        <div class="banner">${ad.imageUrl ? `<img src="${esc(ad.imageUrl)}" alt="${esc(ad.name)}" />` : 'ADVERTISEMENT'}</div>
+        <div class="foot">
+          <strong>${esc(ad.name || 'Advertisement')}</strong>
+          <span class="pill">${esc(ad.caption || 'Ad')}</span>
+        </div>
+      </button>`;
   }
 
   function renderAds(ads) {
@@ -93,25 +99,16 @@
       return;
     }
     $('#adSection').hidden = false;
-    $('#ads').innerHTML = list
-      .map((ad, i) => `
-        <button class="ad" type="button" data-idx="${i}">
-          <div class="banner">${ad.imageUrl ? `<img src="${esc(ad.imageUrl)}" alt="${esc(ad.businessName)}" />` : 'ADVERTISEMENT'}</div>
-          <div class="foot">
-            <strong>${esc(ad.businessName || 'Advertisement')}</strong>
-            <span class="pill">${esc(ad.caption || 'Ad')}</span>
-          </div>
-        </button>`)
-      .join('');
+    $('#ads').innerHTML = list.map(adCard).join('');
 
-    $$('#ads .ad').forEach((btn, i) => {
-      const ad = list[i];
+    $$('#ads .ad').forEach((btn) => {
+      const ad = list.find((a) => a.id === btn.dataset.id);
       btn.addEventListener('click', () => {
         if (!ad.link) return toast('No link configured for this advertisement.', 'err');
         const text = ad.linkType === 'drive'
           ? 'You are being redirected to the advertiser’s poster on Google Drive.'
           : 'You are being redirected to the advertiser’s website.';
-        openModal(ad.businessName || 'Advertisement', text, ad.link);
+        openModal(ad.name || 'Advertisement', text, ad.link);
       });
     });
   }
@@ -142,7 +139,6 @@
       renderHeader(data.settings);
       renderNotices(data.notices, data.settings.marqueeSpeed);
       renderCards(data.links);
-      renderVendors(data.vendors);
       renderAds(data.ads);
     })
     .catch((err) => {

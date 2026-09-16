@@ -49,7 +49,8 @@ const NoticeSchema = new Schema(
 );
 
 /* ------------------------------------------------------------------ */
-/* Vendor                                                              */
+/* Vendor — legacy, kept only so seed.js can migrate old documents into  */
+/* the unified Ad collection below. Not exposed via any route anymore.  */
 /* ------------------------------------------------------------------ */
 const VendorSchema = new Schema(
   {
@@ -64,17 +65,25 @@ const VendorSchema = new Schema(
 );
 
 /* ------------------------------------------------------------------ */
-/* Advertisement                                                       */
+/* Advertisement — unified "Advertisements" section. `kind: 'listing'`  */
+/* is a vendor-style entry (name/phone/location); `kind: 'poster'` is   */
+/* an image ad with a redirect link. Both share one manual order.       */
 /* ------------------------------------------------------------------ */
 const AdSchema = new Schema(
   {
-    businessName: { type: String, required: true, trim: true },
+    kind: { type: String, enum: ['listing', 'poster'], default: 'poster' },
+    name: { type: String, required: true, trim: true },
+    active: { type: Boolean, default: true },
+    order: { type: Number, default: 0 },
+    // listing fields
+    location: { type: String, default: '' },
+    phone: { type: String, default: '' },
+    category: { type: String, default: '' },
+    // poster fields
     caption: { type: String, default: 'Advertisement' },
     imageUrl: { type: String, default: '' },
     linkType: { type: String, enum: ['website', 'drive'], default: 'website' },
     link: { type: String, default: '' },
-    active: { type: Boolean, default: true },
-    order: { type: Number, default: 0 },
   },
   opts
 );

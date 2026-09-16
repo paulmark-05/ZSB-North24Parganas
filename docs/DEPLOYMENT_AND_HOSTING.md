@@ -155,7 +155,7 @@ mongodump --uri="$MONGODB_URI" --out=./backup-$(date +%F)
 # restore:
 mongorestore --uri="$MONGODB_URI" ./backup-2026-07-14
 ```
-Or upgrade to M2+ ($9/mo) for continuous automated backups. The whole dataset is tiny — notices, vendors and three config documents — so a dump takes seconds.
+Or upgrade to M2+ ($9/mo) for continuous automated backups. The whole dataset is tiny — notices, ads and two config documents — so a dump takes seconds.
 
 ---
 
@@ -165,10 +165,10 @@ Or upgrade to M2+ ($9/mo) for continuous automated backups. The whole dataset is
 BASE=https://your-app.onrender.com
 
 curl $BASE/api/health          # expect {"ok":true,...,"driver":"mongo"}
-curl $BASE/api/content         # expect settings, links, ad, notices, vendors
+curl $BASE/api/content         # expect settings, links, notices, ads
 ```
 Then in a browser:
-1. Load `/` — header, banner, cards, vendors and ad all render.
+1. Load `/` — header, banner, cards and the Advertisements section all render.
 2. Load `/admin` — sign in with your production credentials.
 3. Add a notice → refresh `/` → it scrolls.
 4. Change the password on the **Account** tab.

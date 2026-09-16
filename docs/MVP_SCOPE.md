@@ -15,10 +15,9 @@ Light (non-dark) surfaces throughout: `#ffffff` cards on an `#f4f7fb` page. Circ
 ## 3. Public page — components
 1. **Header** — logo, organisation name, district subtitle, tricolour bar.
 2. **Scrolling notice banner** — a red "NOTICE" tag plus a marquee that cycles through all *live* notices in sequence. Pauses on hover. Respects `prefers-reduced-motion`.
-3. **Citizen Services** — two cards: Visitor Management System, Grievance Redressal. Clicking either opens an **in-app confirmation modal** showing the destination URL before redirecting (opens in a new tab).
-4. **Empanelled Vendors** — list with initial-avatar, name, category · location, and a tap-to-call phone pill.
-5. **Advertisement** — one ad slot: poster image + business name. Clicking opens the same confirmation modal, then the linked Google Drive file.
-6. **Footer** — copyright + Administrator Login link.
+3. **Services** — two cards: Visitor Management System, Grievance Redressal. Clicking either opens an **in-app confirmation modal** showing the destination URL before redirecting (opens in a new tab).
+4. **Advertisements** — one unified, manually-ordered list. Each entry is either a *listing* (initial-avatar, name, category · location, tap-to-call phone pill — the old "Vendors" concept) or a *poster* (image + business name, clicking opens the same confirmation modal then the linked website or Google Drive file). Order is set by dragging rows in the admin panel.
+5. **Footer** — copyright + Administrator Login link.
 
 ## 4. Notice model (the core requirement)
 Notices are a **queue**: each has its own date window and auto-expires. Only notices that are `active` **and** within `startDate…endDate` (inclusive) reach the public page.
@@ -40,8 +39,7 @@ A single date and a range are both supported — leave the end date the same as 
 | Login | Real username/password → JWT (bcrypt-hashed, rate-limited) |
 | Notice Banner | Create / edit / enable / disable / delete notices; live preview; live/scheduled/expired badges |
 | VMS & Grievance | Title, description, redirect URL, confirmation text, show/hide — per card |
-| Advertisement | Poster upload, business name, caption, Google Drive link, show/hide |
-| Vendors | Add / edit / remove / hide vendors |
+| Advertisements | Add / edit / remove / hide entries (listing or poster kind); drag-and-drop manual reordering shared across both kinds |
 | Logo & Theme | Org name, subtitle, logo upload, three brand colours, marquee speed, restore defaults |
 | Account | Change admin password |
 
@@ -56,4 +54,4 @@ Browser ──► Express (Node 18+) ──► MongoDB Atlas   (MONGODB_URI set)
 - **Uploads:** stored under `public/uploads/`. (See the deployment guide for object storage on ephemeral hosts.)
 
 ## 7. Out of scope for this MVP
-Multiple admin roles, audit log, i18n (Hindi/Odia), analytics, an in-house VMS/grievance workflow (we link out to existing portals), multiple ad slots, and email notifications. Each is a clean addition on top of this structure.
+Multiple admin roles, audit log, i18n (Hindi/Odia), analytics, an in-house VMS/grievance workflow (we link out to existing portals), and email notifications. Each is a clean addition on top of this structure.

@@ -63,10 +63,10 @@ async function test(name, fn) {
     assert.strictEqual(r.status, 200);
     assert.strictEqual(r.json.ok, true);
   });
-  await test('GET /api/content returns settings, links, notices, vendors, ads', async () => {
+  await test('GET /api/content returns settings, links, notices, ads', async () => {
     const r = await call('GET', '/api/content');
     assert.strictEqual(r.status, 200);
-    for (const k of ['settings', 'links', 'notices', 'vendors', 'ads']) {
+    for (const k of ['settings', 'links', 'notices', 'ads']) {
       assert.ok(k in r.json.data, `missing ${k}`);
     }
   });
@@ -74,8 +74,8 @@ async function test(name, fn) {
     const r = await call('GET', '/api/content');
     r.json.data.notices.forEach((n) => assert.ok(n.text && n.text.length > 0));
   });
-  await test('GET /api/vendors is public', async () => {
-    const r = await call('GET', '/api/vendors', undefined, false);
+  await test('GET /api/ads is public', async () => {
+    const r = await call('GET', '/api/ads', undefined, false);
     assert.strictEqual(r.status, 200);
   });
   await test('Unknown API route returns JSON 404', async () => {
@@ -182,71 +182,64 @@ async function test(name, fn) {
     assert.strictEqual(r.json.data.links.vms.label, 'Visitor Pass');
   });
 
-  console.log('\n── Advertisements ──');
-  let adId = null;
-  await test('POST /api/ads rejects a missing business name', async () => {
-    const r = await call('POST', '/api/ads', { link: 'https://example.com' });
+  console.log('\n── Advertisements (unified listing + poster) ──');
+  let posterId = null;
+  let listingId = null;
+  await test('POST /api/ads rejects a missing name', async () => {
+    const r = await call('POST', '/api/ads', { kind: 'poster', link: 'https://example.com' });
     assert.strictEqual(r.status, 400);
   });
-  await test('POST /api/ads rejects an invalid link', async () => {
-    const r = await call('POST', '/api/ads', { businessName: 'Veer Motors', link: 'not-a-url' });
+  await test('POST /api/ads rejects an invalid link on a poster', async () => {
+    const r = await call('POST', '/api/ads', { kind: 'poster', name: 'Veer Motors', link: 'not-a-url' });
     assert.strictEqual(r.status, 400);
   });
-  await test('POST /api/ads creates a website ad', async () => {
+  await test('POST /api/ads creates a poster ad', async () => {
     const r = await call('POST', '/api/ads', {
-      businessName: 'Veer Motors', linkType: 'website',
-      link: 'https://veermotors.example.com', imageUrl: '/uploads/x.png',
+      kind: 'poster', name: 'Unity Run', linkType: 'website',
+      link: 'https://unityrun.example.com', imageUrl: '/uploads/x.png',
     });
     assert.strictEqual(r.status, 201);
-    assert.strictEqual(r.json.data.businessName, 'Veer Motors');
-    adId = r.json.data.id;
+    assert.strictEqual(r.json.data.name, 'Unity Run');
+    assert.strictEqual(r.json.data.kind, 'poster');
+    posterId = r.json.data.id;
   });
-  await test('POST /api/ads creates a second, Google Drive ad', async () => {
+  await test('POST /api/ads creates a listing entry (no link required)', async () => {
     const r = await call('POST', '/api/ads', {
-      businessName: 'Unity Run', linkType: 'drive',
-      link: 'https://drive.google.com/file/d/abc/view',
+      kind: 'listing', name: 'Test Vendor', location: 'Gate 2', phone: '9990001111',
     });
     assert.strictEqual(r.status, 201);
+    assert.strictEqual(r.json.data.kind, 'listing');
+    listingId = r.json.data.id;
   });
-  await test('Both active ads appear in public content', async () => {
+  await test('Both entries appear together in public content', async () => {
     const r = await call('GET', '/api/content', undefined, false);
-    assert.strictEqual(r.json.data.ads.length, 2);
+    const ids = r.json.data.ads.map((a) => a.id);
+    assert.ok(ids.includes(posterId) && ids.includes(listingId));
+  });
+  await test('PUT /api/ads/:id updates a listing', async () => {
+    const r = await call('PUT', '/api/ads/' + listingId, { kind: 'listing', name: 'Renamed Vendor', active: true });
+    assert.strictEqual(r.json.data.name, 'Renamed Vendor');
+  });
+  await test('POST /api/ads/reorder sets explicit order', async () => {
+    const r = await call('POST', '/api/ads/reorder', { order: [listingId, posterId] });
+    assert.strictEqual(r.status, 200);
+    const ordered = r.json.data.filter((a) => [listingId, posterId].includes(a.id));
+    assert.strictEqual(ordered[0].id, listingId);
+    assert.strictEqual(ordered[1].id, posterId);
   });
   await test('PATCH /api/ads/:id/toggle flips active', async () => {
-    const r = await call('PATCH', '/api/ads/' + adId + '/toggle');
+    const r = await call('PATCH', '/api/ads/' + posterId + '/toggle');
     assert.strictEqual(r.json.data.active, false);
   });
   await test('Disabled ads are hidden from public content', async () => {
     const r = await call('GET', '/api/content', undefined, false);
-    assert.ok(!r.json.data.ads.some((a) => a.id === adId));
+    assert.ok(!r.json.data.ads.some((a) => a.id === posterId));
   });
   await test('DELETE /api/ads/:id removes it', async () => {
-    const r = await call('DELETE', '/api/ads/' + adId);
+    const r = await call('DELETE', '/api/ads/' + posterId);
     assert.strictEqual(r.status, 200);
-  });
-
-  console.log('\n── Vendors ──');
-  let vid = null;
-  await test('POST /api/vendors rejects a missing name', async () => {
-    const r = await call('POST', '/api/vendors', { location: 'Gate 1' });
-    assert.strictEqual(r.status, 400);
-  });
-  await test('POST /api/vendors creates a vendor', async () => {
-    const r = await call('POST', '/api/vendors', { name: 'Test Vendor', location: 'Gate 2', phone: '9990001111' });
-    assert.strictEqual(r.status, 201);
-    vid = r.json.data.id;
-  });
-  await test('PUT /api/vendors/:id updates a vendor', async () => {
-    const r = await call('PUT', '/api/vendors/' + vid, { name: 'Renamed Vendor', active: false });
-    assert.strictEqual(r.json.data.name, 'Renamed Vendor');
-  });
-  await test('Inactive vendors are hidden from public content', async () => {
-    const r = await call('GET', '/api/content', undefined, false);
-    assert.ok(!r.json.data.vendors.some((v) => v.id === vid));
-  });
-  await test('DELETE /api/vendors/:id removes it', async () => {
-    const r = await call('DELETE', '/api/vendors/' + vid);
-    assert.strictEqual(r.status, 200);
+    const r2 = await call('DELETE', '/api/ads/' + listingId);
+    assert.strictEqual(r2.status, 200);
   });
 
   console.log('\n── Settings & theme ──');

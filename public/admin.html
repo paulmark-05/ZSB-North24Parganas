@@ -54,8 +54,7 @@
       <nav class="side" id="side">
         <button class="nav-item active" data-tab="notices"><span class="n">📢</span> Notice Banner</button>
         <button class="nav-item" data-tab="services"><span class="n">🔗</span> VMS &amp; Grievance</button>
-        <button class="nav-item" data-tab="ad"><span class="n">🖼</span> Advertisement</button>
-        <button class="nav-item" data-tab="vendors"><span class="n">🏪</span> Vendors</button>
+        <button class="nav-item" data-tab="ad"><span class="n">🖼</span> Advertisements</button>
         <button class="nav-item" data-tab="settings"><span class="n">⚙️</span> Logo &amp; Theme</button>
         <button class="nav-item" data-tab="account"><span class="n">🔐</span> Account</button>
       </nav>
@@ -171,48 +170,67 @@
           </div>
         </section>
 
-        <!-- ---------------- ADS ---------------- -->
+        <!-- ---------------- ADVERTISEMENTS (unified) ---------------- -->
         <section class="panel" data-panel="ad" hidden>
           <header>
             <div>
               <h2>Advertisements</h2>
-              <p>Add one or more ads. Each can redirect to a website or to a poster on Google Drive.</p>
+              <p>A simple listing (name/phone/location) or a poster ad with a redirect link. Drag rows to reorder — the same order shows on the public site.</p>
             </div>
             <div class="right"><button class="btn sm" id="newAd" type="button">+ New ad</button></div>
           </header>
           <div class="content">
             <form id="adForm" hidden>
               <div class="alert" id="adErr" hidden></div>
+
+              <div class="field">
+                <label>Type</label>
+                <div class="inline">
+                  <label class="radio-opt"><input type="radio" name="adKind" value="poster" checked /> Poster ad (image + link)</label>
+                  <label class="radio-opt"><input type="radio" name="adKind" value="listing" /> Listing (name + phone/location)</label>
+                </div>
+              </div>
+
               <div class="row">
-                <div class="field"><label for="adName2">Business name</label><input class="input" id="adName2" placeholder="e.g. Veer Motors" /></div>
-                <div class="field"><label for="adCaption">Caption / label</label><input class="input" id="adCaption" placeholder="Advertisement" /></div>
+                <div class="field"><label for="adName2" id="adNameLabel">Business name</label><input class="input" id="adName2" placeholder="e.g. Veer Motors" /></div>
+                <div class="field" id="fCaption"><label for="adCaption">Caption / label</label><input class="input" id="adCaption" placeholder="Advertisement" /></div>
+                <div class="field" id="fCategory" hidden><label for="adCategory">Category</label><input class="input" id="adCategory" placeholder="e.g. Documentation" /></div>
               </div>
-              <div class="field">
-                <label>Link type</label>
-                <div class="inline">
-                  <label class="radio-opt"><input type="radio" name="adLinkType" value="website" checked /> Website</label>
-                  <label class="radio-opt"><input type="radio" name="adLinkType" value="drive" /> Google Drive</label>
-                </div>
+
+              <div class="row" id="fListingFields" hidden>
+                <div class="field"><label for="adLocation">Location</label><input class="input" id="adLocation" placeholder="e.g. Gate No. 1" /></div>
+                <div class="field"><label for="adPhone">Phone</label><input class="input" id="adPhone" placeholder="e.g. 9876543210" /></div>
               </div>
-              <div class="field">
-                <label for="adLink" id="adLinkLabel">Website URL (opens when the ad is clicked)</label>
-                <input class="input" id="adLink" placeholder="https://…" />
-                <div class="hint" id="adLinkHint">Any http(s) link — the advertiser's own website, landing page, etc.</div>
-              </div>
-              <div class="field">
-                <label>Poster image</label>
-                <div class="inline">
-                  <div class="ad" style="max-width:260px;cursor:default;">
-                    <div class="banner" id="adPreview">POSTER PLACEHOLDER</div>
-                  </div>
-                  <div class="stack">
-                    <input type="file" id="adFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden />
-                    <button class="btn ghost sm" type="button" id="adPick">Upload image</button>
-                    <button class="btn ghost sm" type="button" id="adClear">Remove image</button>
+
+              <div id="fPosterFields">
+                <div class="field">
+                  <label>Link type</label>
+                  <div class="inline">
+                    <label class="radio-opt"><input type="radio" name="adLinkType" value="website" checked /> Website</label>
+                    <label class="radio-opt"><input type="radio" name="adLinkType" value="drive" /> Google Drive</label>
                   </div>
                 </div>
-                <div class="hint">PNG / JPG / WEBP / SVG, up to 4 MB. Recommended 1200 × 600.</div>
+                <div class="field">
+                  <label for="adLink" id="adLinkLabel">Website URL (opens when the ad is clicked)</label>
+                  <input class="input" id="adLink" placeholder="https://…" />
+                  <div class="hint" id="adLinkHint">Any http(s) link — the advertiser's own website, landing page, etc.</div>
+                </div>
+                <div class="field">
+                  <label>Poster image</label>
+                  <div class="inline">
+                    <div class="ad" style="max-width:260px;cursor:default;">
+                      <div class="banner" id="adPreview">POSTER PLACEHOLDER</div>
+                    </div>
+                    <div class="stack">
+                      <input type="file" id="adFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden />
+                      <button class="btn ghost sm" type="button" id="adPick">Upload image</button>
+                      <button class="btn ghost sm" type="button" id="adClear">Remove image</button>
+                    </div>
+                  </div>
+                  <div class="hint">PNG / JPG / WEBP / SVG, up to 4 MB. Recommended 1200 × 600.</div>
+                </div>
               </div>
+
               <div class="field"><label class="switch"><span>Show on public site  </span><input type="checkbox" id="adEnabled" checked /><span class="slot"></span></label></div>
               <div class="inline">
                 <button class="btn" type="submit">Save advertisement</button>
@@ -220,38 +238,8 @@
               </div>
               <div class="divider"></div>
             </form>
+            <div class="hint" id="adListHint" style="margin-bottom:10px;">Drag a row by its ⠿ handle to reorder.</div>
             <div id="adList"></div>
-          </div>
-        </section>
-
-        <!-- ---------------- VENDORS ---------------- -->
-        <section class="panel" data-panel="vendors" hidden>
-          <header>
-            <div>
-              <h2>Vendors</h2>
-              <p>Vendors listed on the public homepage.</p>
-            </div>
-            <div class="right"><button class="btn sm" id="newVendor" type="button">+ New vendor</button></div>
-          </header>
-          <div class="content">
-            <form id="vendorForm" hidden>
-              <div class="alert" id="vendorErr" hidden></div>
-              <div class="row">
-                <div class="field"><label for="vName">Name</label><input class="input" id="vName" placeholder="e.g. Sainik Xerox" /></div>
-                <div class="field"><label for="vCategory">Category</label><input class="input" id="vCategory" placeholder="e.g. Documentation" /></div>
-              </div>
-              <div class="row">
-                <div class="field"><label for="vLocation">Location</label><input class="input" id="vLocation" placeholder="e.g. Gate No. 1" /></div>
-                <div class="field"><label for="vPhone">Phone</label><input class="input" id="vPhone" placeholder="e.g. 9876543210" /></div>
-              </div>
-              <div class="field"><label class="switch"><input type="checkbox" id="vActive" checked /><span class="slot"></span> Visible on public site</label></div>
-              <div class="inline">
-                <button class="btn" type="submit">Save vendor</button>
-                <button class="btn ghost" id="cancelVendor" type="button">Cancel</button>
-              </div>
-              <div class="divider"></div>
-            </form>
-            <div id="vendorList"></div>
           </div>
         </section>
 
