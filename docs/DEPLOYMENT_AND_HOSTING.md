@@ -70,11 +70,10 @@ serverless filesystem, which is wiped between invocations.
    `ADMIN_USERNAME`, `ADMIN_PASSWORD`) in **Project → Settings → Environment Variables**.
 3. Redeploy after adding variables (Vercel doesn't hot-reload env changes into a
    already-built deployment).
-
-⚠️ On Vercel the filesystem is read-only — the **"Upload image" buttons in the
-Admin CMS will fail.** Use option A from §6 instead: paste a direct image URL
-(including a Google Drive "anyone with the link" URL) into the logo/ad fields —
-the CMS stores whatever URL you give it, upload is just a convenience.
+4. **Storage tab → Create Database → Blob** → connect it to the project so the
+   "Upload logo" / "Upload image" buttons in the Admin CMS actually persist (see §6).
+   Skip this step and they'll fail outright — Vercel's filesystem is read-only, so
+   there's no disk to fall back to here the way there is on Render.
 
 ---
 
@@ -132,15 +131,19 @@ If Express sits behind a proxy, add `app.set('trust proxy', 1);` in `server/inde
 
 ## 6. Uploads on ephemeral hosts (important)
 
-Render, Railway and Vercel **wipe the disk on every deploy and restart**. Logos and ad posters saved to `public/uploads/` will disappear.
+Render, Railway and Vercel **wipe the disk on every deploy and restart**. Logos and ad posters saved to `public/uploads/` would disappear — and on Vercel specifically, the filesystem is read-only at runtime, so a disk write fails outright rather than just being temporary.
 
-**Three options, easiest first:**
+**The app already handles this.** `server/routes/api.js` uploads through [Vercel Blob](https://vercel.com/docs/storage/vercel-blob) whenever `BLOB_READ_WRITE_TOKEN` is present in the environment, and falls back to writing `public/uploads/` otherwise (local dev, or any host with a normal persistent disk). No code changes needed — just enable it:
 
-**A. Paste an external URL (zero code).** Host the image anywhere public — including Google Drive with "Anyone with the link" sharing — and paste its direct URL. The CMS stores whatever URL you save; the upload button is a convenience, not a requirement.
+1. Vercel dashboard → your project → **Storage** tab → **Create Database** → **Blob**.
+2. Connect it to the project. Vercel automatically adds `BLOB_READ_WRITE_TOKEN` to your environment variables and redeploys.
+3. Done — the "Upload logo" / "Upload image" buttons in the CMS now persist to Blob storage and return a permanent public URL.
 
-**B. Cloudinary free tier (recommended).** Sign up, then in `server/routes/api.js` swap multer's `diskStorage` for `multer.memoryStorage()` and pipe the buffer to Cloudinary's upload API, returning the Cloudinary URL instead of `/uploads/…`. Roughly 15 lines; nothing else in the app changes because everything downstream just consumes a URL string.
+**Alternatives, if you'd rather not use Vercel Blob:**
 
-**C. Render persistent disk.** On a paid Render plan, attach a disk mounted at `/opt/render/project/src/public/uploads`. No code change at all.
+**A. Paste an external URL (zero code, any host).** Host the image anywhere public — including Google Drive with "Anyone with the link" sharing — and paste its direct URL. The CMS stores whatever URL you save; the upload button is a convenience, not a requirement.
+
+**B. Render persistent disk.** On a paid Render plan, attach a disk mounted at `/opt/render/project/src/public/uploads`. No code change needed — the disk-fallback path in `saveUpload()` already writes there.
 
 ---
 

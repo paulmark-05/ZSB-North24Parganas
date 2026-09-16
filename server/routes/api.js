@@ -12,25 +12,45 @@ const { composeNoticeText, isLive, validateNotice } = require('../lib/notice');
 const router = express.Router();
 
 /* ------------------------------------------------------------------ */
-/* File uploads (logo + ad poster) -> /public/uploads                   */
+/* File uploads (logo + ad poster)                                     */
+/*                                                                      */
+/* Vercel's filesystem is read-only outside /tmp, so files can't live   */
+/* on local disk there. When BLOB_READ_WRITE_TOKEN is present (Vercel   */
+/* auto-injects it once a Blob store is connected to the project) we    */
+/* upload to Vercel Blob and return its public URL. Otherwise (local    */
+/* dev, or any host with a normal writable disk) we fall back to        */
+/* saving under /public/uploads exactly as before.                      */
 /* ------------------------------------------------------------------ */
 const UPLOAD_DIR = path.join(__dirname, '..', '..', 'public', 'uploads');
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+const USE_BLOB = !!process.env.BLOB_READ_WRITE_TOKEN;
+if (!USE_BLOB && !fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
-    filename: (_req, file, cb) => {
-      const ext = (path.extname(file.originalname) || '.png').toLowerCase();
-      cb(null, `${Date.now()}-${Math.round(Math.random() * 1e6)}${ext}`);
-    },
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: 4 * 1024 * 1024 }, // 4 MB
   fileFilter: (_req, file, cb) => {
     const ok = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'].includes(file.mimetype);
     cb(ok ? null : new Error('Only PNG, JPG, WEBP or SVG images are allowed.'), ok);
   },
 });
+
+async function saveUpload(file) {
+  const ext = (path.extname(file.originalname) || '.png').toLowerCase();
+  const filename = `${Date.now()}-${Math.round(Math.random() * 1e6)}${ext}`;
+
+  if (USE_BLOB) {
+    const { put } = require('@vercel/blob');
+    const blob = await put(filename, file.buffer, {
+      access: 'public',
+      contentType: file.mimetype,
+      addRandomSuffix: false,
+    });
+    return blob.url;
+  }
+
+  fs.writeFileSync(path.join(UPLOAD_DIR, filename), file.buffer);
+  return `/uploads/${filename}`;
+}
 
 /* ------------------------------------------------------------------ */
 /* Health                                                              */
@@ -413,10 +433,15 @@ router.delete('/vendors/:id', requireAuth, async (req, res, next) => {
 /* Upload                                                              */
 /* ------------------------------------------------------------------ */
 router.post('/upload', requireAuth, (req, res) => {
-  upload.single('file')(req, res, (err) => {
+  upload.single('file')(req, res, async (err) => {
     if (err) return res.status(400).json({ ok: false, error: err.message });
     if (!req.file) return res.status(400).json({ ok: false, error: 'No file received.' });
-    res.status(201).json({ ok: true, data: { url: `/uploads/${req.file.filename}` } });
+    try {
+      const url = await saveUpload(req.file);
+      res.status(201).json({ ok: true, data: { url } });
+    } catch (uploadErr) {
+      res.status(500).json({ ok: false, error: 'Upload failed: ' + uploadErr.message });
+    }
   });
 });
 
