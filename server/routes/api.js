@@ -74,7 +74,18 @@ async function saveUpload(file) {
     return blob.url;
   }
 
-  fs.writeFileSync(path.join(UPLOAD_DIR, filename), buffer);
+  try {
+    fs.writeFileSync(path.join(UPLOAD_DIR, filename), buffer);
+  } catch (err) {
+    if (err.code === 'EROFS' || err.code === 'EACCES') {
+      throw new Error(
+        'This host has a read-only filesystem, so uploads need object storage. ' +
+        'On Vercel: Project → Storage → Create Database → Blob, then connect it to this project ' +
+        '(it adds BLOB_READ_WRITE_TOKEN automatically — no other setup needed).'
+      );
+    }
+    throw err;
+  }
   return `/uploads/${filename}`;
 }
 
