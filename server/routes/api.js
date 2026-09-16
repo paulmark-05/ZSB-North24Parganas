@@ -28,7 +28,10 @@ if (!USE_BLOB && !fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursiv
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 4 * 1024 * 1024 }, // 4 MB
+  // The client already shrinks images to ~1600px before sending (see public/js/api.js),
+  // so this is just a generous backstop — e.g. a very detailed lossless PNG, or a
+  // client that skipped the resize step (old browser, direct API call).
+  limits: { fileSize: 8 * 1024 * 1024 }, // 8 MB
   fileFilter: (_req, file, cb) => {
     const ok = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'].includes(file.mimetype);
     cb(ok ? null : new Error('Only PNG, JPG, WEBP or SVG images are allowed.'), ok);

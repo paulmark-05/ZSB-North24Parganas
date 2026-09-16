@@ -38,6 +38,49 @@
     return json;
   }
 
+  /**
+   * Shrinks an image in the browser before it's ever sent. Vercel (and most
+   * serverless hosts) reject request bodies over ~4.5MB at the platform
+   * level — before our own code even runs — so a phone photo has to be
+   * downsized client-side, not just on the server. SVGs are vector and
+   * untouched; everything else is capped to maxDim on its longest side and
+   * re-encoded at `quality` (ignored for PNG, which is lossless).
+   */
+  async function shrinkImage(file, maxDim, quality) {
+    if (!file.type || file.type === 'image/svg+xml' || !file.type.startsWith('image/')) return file;
+
+    let img;
+    const url = URL.createObjectURL(file);
+    try {
+      img = await new Promise((resolve, reject) => {
+        const im = new Image();
+        im.onload = () => resolve(im);
+        im.onerror = () => reject(new Error('Could not read image'));
+        im.src = url;
+      });
+    } catch {
+      URL.revokeObjectURL(url);
+      return file; // unreadable as an image — let the server validate/reject it
+    }
+
+    const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+    const width = Math.round(img.width * scale);
+    const height = Math.round(img.height * scale);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+    URL.revokeObjectURL(url);
+
+    const outType = file.type === 'image/png' ? 'image/png' : file.type === 'image/webp' ? 'image/webp' : 'image/jpeg';
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, outType, quality));
+    if (!blob) return file; // canvas export failed for some reason — fall back to the original
+
+    const ext = outType === 'image/png' ? '.png' : outType === 'image/webp' ? '.webp' : '.jpg';
+    return new File([blob], file.name.replace(/\.\w+$/, '') + ext, { type: outType });
+  }
+
   window.API = {
     Token,
     get: (p) => request('GET', p),
@@ -45,9 +88,10 @@
     put: (p, b) => request('PUT', p, b),
     patch: (p, b) => request('PATCH', p, b || {}),
     del: (p) => request('DELETE', p),
-    upload: (file) => {
+    upload: async (file) => {
+      const shrunk = await shrinkImage(file, 1600, 0.85);
       const fd = new FormData();
-      fd.append('file', file);
+      fd.append('file', shrunk);
       return request('POST', '/upload', fd, true);
     },
   };
