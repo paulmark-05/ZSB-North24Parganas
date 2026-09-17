@@ -53,6 +53,21 @@ async function test(name, fn) {
   // isolate data
   if (fs.existsSync(DATA_FILE)) fs.renameSync(DATA_FILE, BACKUP);
 
+  console.log('\n── Rich-text sanitizer (direct, no server needed) ──');
+  const { sanitizeRich } = require('../server/lib/sanitizeRich');
+  await test('sanitizer strips javascript: URIs (GHSA-vccv-cmxp-4j9h) since no attributes are ever allowed', () => {
+    assert.strictEqual(sanitizeRich('<a href="javascript:alert(1)" formaction="javascript:alert(1)">x</a>'), 'x');
+  });
+  await test('sanitizer strips SVG SMIL payloads (GHSA-g8qq-57p8-ggw5) since svg/animate are not allowed tags', () => {
+    assert.strictEqual(sanitizeRich('<svg><animate xlink:href="data:text/javascript,alert(1)" /></svg>'), '');
+  });
+  await test('sanitizer defuses the </textarea/> mutation-XSS trick (GHSA-jxwj-j7wr-gfrw)', () => {
+    assert.strictEqual(sanitizeRich('<b>bold</b><textarea><b>hidden</b></textarea/><img src=x onerror=alert(1)>after'), '<b>bold</b>');
+  });
+  await test('sanitizer keeps the allowed tags with no attributes', () => {
+    assert.strictEqual(sanitizeRich('<b>b</b><i>i</i><u>u</u><br><strong>s</strong><em>e</em>'), '<b>b</b><i>i</i><u>u</u><br /><strong>s</strong><em>e</em>');
+  });
+
   const { start } = require('../server/index');
   await start();
   await new Promise((r) => setTimeout(r, 300));
