@@ -33,7 +33,9 @@
     }
     // Duplicate the sequence once so the -50% translate loops seamlessly.
     const seq = notices
-      .map((n) => `<span class="item">${formatText(n.text)}</span><span class="item sep">•</span>`)
+      // n.text is already sanitized HTML for custom notices (server/lib/sanitizeRich.js)
+      // and a plain composed sentence for every other type — safe to insert as-is.
+      .map((n) => `<span class="item">${n.text}</span><span class="item sep">•</span>`)
       .join('');
     track.innerHTML = seq + seq;
     track.style.setProperty('--speed', Math.max(12, Number(speed) || 24) + 's');
@@ -90,7 +92,7 @@
         <div class="foot">
           <div class="foot-text">
             <strong>${esc(ad.name || 'Advertisement')}</strong>
-            ${ad.description ? `<span class="desc">${formatText(ad.description)}</span>` : ''}
+            ${ad.description ? `<span class="desc">${ad.description}</span>` : ''}
           </div>
         </div>
       </button>`;

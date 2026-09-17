@@ -3,6 +3,8 @@
  * a notice is currently "live" (active + within its date window).
  */
 
+const { sanitizeRich } = require('./sanitizeRich');
+
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function fmt(d) {
@@ -78,15 +80,23 @@ function validateNotice(body = {}) {
   if (type === 'counter_closed' && counters.length === 0) {
     errors.push('Select at least one counter (1-7)');
   }
-  if (type === 'custom' && !String(body.customText || '').trim()) {
-    errors.push('customText is required for a custom notice');
+
+  let customText = '';
+  if (type === 'custom') {
+    const clean = sanitizeRich(body.customText, 500);
+    if (clean === null) {
+      errors.push('Custom message must be 500 characters or fewer.');
+    } else {
+      customText = clean;
+      if (!customText.replace(/<[^>]*>/g, '').trim()) errors.push('customText is required for a custom notice');
+    }
   }
 
   const value = {
     type,
     counters: type === 'counter_closed' ? counters : [],
     occasion: type === 'office_closed' ? String(body.occasion || '').trim() : '',
-    customText: type === 'custom' ? String(body.customText || '').trim() : '',
+    customText,
     startDate,
     endDate,
     active: body.active === undefined ? true : !!body.active,

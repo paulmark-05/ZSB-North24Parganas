@@ -16,8 +16,8 @@
   };
 
   /* ==================== TEXT FORMATTING TOOLBARS ==================== */
-  wireFormatToolbar($('#nCustomToolbar'), $('#nCustom'));
-  wireFormatToolbar($('#adDescriptionToolbar'), $('#adDescription'));
+  wireRichEditor($('#nCustomToolbar'), $('#nCustom'));
+  wireRichEditor($('#adDescriptionToolbar'), $('#adDescription'));
 
   /* ==================== BUSY OVERLAY (uploads, saves) ==================== */
   function showLoading(text) {
@@ -92,7 +92,7 @@
       type: $('#nType').value,
       counters: $$('#counterChips input:checked').map((c) => Number(c.value)),
       occasion: $('#nOccasion').value.trim(),
-      customText: $('#nCustom').value.trim(),
+      customText: sanitizeRichText($('#nCustom').innerHTML),
       startDate: $('#nStart').value,
       endDate: $('#nEnd').value || $('#nStart').value,
       active: $('#nActive').checked,
@@ -110,16 +110,19 @@
       }
       try {
         const r = await API.post('/notices/preview', body);
-        $('#nPreview').innerHTML = r.data.text ? formatText(r.data.text) : '—';
+        // Server already returns a sanitized-HTML-safe string for custom notices
+        // (and plain composed sentences for the templated types) — safe to insert as-is.
+        $('#nPreview').innerHTML = r.data.text || '—';
       } catch (err) {
         $('#nPreview').innerHTML = '<em>' + esc(err.message) + '</em>';
       }
     }, 220);
   }
 
-  ['#nType', '#nOccasion', '#nCustom', '#nStart', '#nEnd'].forEach((s) =>
+  ['#nType', '#nOccasion', '#nStart', '#nEnd'].forEach((s) =>
     $(s).addEventListener('input', () => { noticeTypeUI(); refreshPreview(); })
   );
+  $('#nCustom').addEventListener('input', refreshPreview);
   chips.addEventListener('change', refreshPreview);
 
   function openNoticeForm(n) {
@@ -129,7 +132,7 @@
     $('#nType').value = n ? n.type : 'counter_closed';
     $$('#counterChips input').forEach((c) => (c.checked = !!(n && (n.counters || []).includes(Number(c.value)))));
     $('#nOccasion').value = n ? n.occasion || '' : '';
-    $('#nCustom').value = n ? n.customText || '' : '';
+    $('#nCustom').innerHTML = n ? n.customText || '' : '';
     $('#nStart').value = n ? String(n.startDate).slice(0, 10) : todayISO();
     $('#nEnd').value = n ? String(n.endDate).slice(0, 10) : todayISO();
     $('#nActive').checked = n ? n.active !== false : true;
@@ -287,7 +290,7 @@
 
     $('#adName2').value = ad ? ad.name : '';
     $('#adCaption').value = ad ? ad.caption || '' : 'Advertisement';
-    $('#adDescription').value = ad ? ad.description || '' : '';
+    $('#adDescription').innerHTML = ad ? ad.description || '' : '';
     $('#adCategory').value = ad ? ad.category || '' : '';
     $('#adLocation').value = ad ? ad.location || '' : '';
     $('#adPhone').value = ad ? ad.phone || '' : '';
@@ -341,7 +344,7 @@
       body.phone = $('#adPhone').value;
     } else {
       body.caption = $('#adCaption').value;
-      body.description = $('#adDescription').value;
+      body.description = sanitizeRichText($('#adDescription').innerHTML);
       body.linkType = ($$('input[name="adLinkType"]:checked')[0] || {}).value || 'website';
       body.link = $('#adLink').value;
       body.imageUrl = $('#adHasImage').checked ? adImageUrl : '';

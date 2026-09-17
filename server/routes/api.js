@@ -9,6 +9,7 @@ const rateLimit = require('express-rate-limit');
 const { getStore, DEFAULTS } = require('../store');
 const { signToken, requireAuth } = require('../middleware/auth');
 const { composeNoticeText, isLive, validateNotice } = require('../lib/notice');
+const { sanitizeRich } = require('../lib/sanitizeRich');
 
 const router = express.Router();
 
@@ -298,7 +299,9 @@ function adPayload(b = {}) {
     const link = String(b.link || '').trim();
     if (link && !isHttpUrl(link)) return { ok: false, error: 'Ad link must be a valid http(s) URL.' };
     value.caption = String(b.caption || '').trim() || 'Advertisement';
-    value.description = String(b.description || '').trim().slice(0, 200);
+    const description = sanitizeRich(b.description, 200);
+    if (description === null) return { ok: false, error: 'Description must be 200 characters or fewer.' };
+    value.description = description;
     value.imageUrl = String(b.imageUrl || '').trim();
     value.linkType = linkType;
     value.link = link;

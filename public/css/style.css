@@ -301,6 +301,11 @@ button, input, select, textarea { font-family: inherit; font-size: 15px; }
   border-color: var(--blue); box-shadow: 0 0 0 3px rgba(46, 127, 212, .14);
 }
 .textarea { min-height: 82px; resize: vertical; }
+
+/* contenteditable rich-text boxes (bold/italic/underline toolbar targets) */
+.rich-editable { white-space: pre-wrap; word-break: break-word; overflow-y: auto; cursor: text; }
+.rich-editable:empty:before { content: attr(data-placeholder); color: var(--muted-2); }
+.rich-editable-sm { min-height: 52px; }
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 @media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
 
