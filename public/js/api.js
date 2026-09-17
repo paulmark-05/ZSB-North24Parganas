@@ -106,38 +106,57 @@
     );
 
   /**
-   * Turns a tiny, admin-typed markup subset into safe HTML: **bold**,
-   * *italic*, ++underline++. Escapes the raw text FIRST, then only ever
-   * inserts our own hardcoded tags around already-escaped content — so
-   * there's no way for stored text to introduce real markup or attributes.
-   * Pair with CSS `white-space: pre-line` wherever the result is inserted
-   * so line breaks the admin typed (Enter) are preserved too.
+   * Strips everything except a tiny whitelist of inline tags (b/strong/i/em/u/br,
+   * no attributes). This is a client-side convenience only — the server runs
+   * the authoritative sanitizer (server/lib/sanitizeRich.js) since these fields
+   * are reachable directly via the API, not just through this editor.
    */
-  window.formatText = (s) =>
-    esc(s)
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\+\+(.+?)\+\+/g, '<u>$1</u>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>');
+  const RICH_ALLOWED = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'BR']);
+  window.sanitizeRichText = (html) => {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = String(html == null ? '' : html);
+    (function clean(node) {
+      Array.from(node.childNodes).forEach((child) => {
+        if (child.nodeType === Node.TEXT_NODE) return;
+        if (child.nodeType !== Node.ELEMENT_NODE) { child.remove(); return; }
+        if (!RICH_ALLOWED.has(child.tagName)) {
+          while (child.firstChild) child.parentNode.insertBefore(child.firstChild, child);
+          child.remove();
+          return;
+        }
+        Array.from(child.attributes).forEach((a) => child.removeAttribute(a.name));
+        clean(child);
+      });
+    })(tmp);
+    return tmp.innerHTML;
+  };
 
   /**
-   * Wires a row of B / I / U buttons (data-fmt="bold|italic|underline") to
-   * wrap the target textarea's current selection in the matching markers,
-   * or insert them at the cursor with placeholder text if nothing is
-   * selected. Fires an `input` event afterward so any live preview updates.
+   * Turns a `.rich-editable` div into a live bold/italic/underline editor:
+   * the B/I/U buttons apply real formatting immediately (via execCommand),
+   * Enter inserts a <br> (not a nested block), and paste always lands as
+   * plain text so clipboard HTML can't sneak in unreviewed markup.
    */
-  window.wireFormatToolbar = (toolbarEl, textareaEl) => {
-    const marks = { bold: '**', italic: '*', underline: '++' };
+  window.wireRichEditor = (toolbarEl, editableEl) => {
+    try { document.execCommand('defaultParagraphSeparator', false, 'br'); } catch { /* older browsers */ }
+
     toolbarEl.querySelectorAll('.fmt-btn').forEach((btn) => {
+      btn.addEventListener('mousedown', (e) => e.preventDefault()); // keep the text selection intact
       btn.addEventListener('click', () => {
-        const mark = marks[btn.dataset.fmt];
-        if (!mark) return;
-        const { selectionStart: start, selectionEnd: end, value } = textareaEl;
-        const selected = value.slice(start, end) || 'text';
-        textareaEl.value = value.slice(0, start) + mark + selected + mark + value.slice(end);
-        textareaEl.focus();
-        textareaEl.setSelectionRange(start + mark.length, start + mark.length + selected.length);
-        textareaEl.dispatchEvent(new Event('input'));
+        editableEl.focus();
+        document.execCommand(btn.dataset.fmt, false, null);
+        editableEl.dispatchEvent(new Event('input'));
       });
+    });
+
+    editableEl.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+      document.execCommand('insertText', false, text);
+    });
+
+    editableEl.addEventListener('blur', () => {
+      editableEl.innerHTML = sanitizeRichText(editableEl.innerHTML);
     });
   };
 

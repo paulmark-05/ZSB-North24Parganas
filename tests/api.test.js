@@ -140,6 +140,19 @@ async function test(name, fn) {
     const r = await call('POST', '/api/notices', { type: 'custom', customText: '  ', startDate: '2026-08-01' });
     assert.strictEqual(r.status, 400);
   });
+  await test('POST /api/notices rejects custom text that is only stripped-out tags', async () => {
+    const r = await call('POST', '/api/notices', { type: 'custom', customText: '<div>  </div>', startDate: '2026-08-01' });
+    assert.strictEqual(r.status, 400);
+  });
+  await test('POST /api/notices sanitizes custom text, keeping the allowed tags and dropping the rest', async () => {
+    const r = await call('POST', '/api/notices', {
+      type: 'custom', customText: '<script>alert(1)</script><b>Camp</b> today <img src=x onerror=alert(1)>',
+      startDate: '2026-08-01',
+    });
+    assert.strictEqual(r.status, 201);
+    assert.strictEqual(r.json.data.text, '<b>Camp</b> today');
+    await call('DELETE', '/api/notices/' + r.json.data.id);
+  });
   await test('GET /api/notices lists notices with live flags', async () => {
     const r = await call('GET', '/api/notices');
     assert.ok(Array.isArray(r.json.data));
@@ -202,6 +215,19 @@ async function test(name, fn) {
     assert.strictEqual(r.json.data.name, 'Unity Run');
     assert.strictEqual(r.json.data.kind, 'poster');
     posterId = r.json.data.id;
+  });
+  await test('POST /api/ads sanitizes the description, stripping disallowed tags', async () => {
+    const r = await call('POST', '/api/ads', {
+      kind: 'poster', name: 'Sanitize Test',
+      description: '<script>alert(1)</script><b>Bold</b> and <em>italic</em> and <u>underline</u><img src=x onerror=alert(1)>',
+    });
+    assert.strictEqual(r.status, 201);
+    assert.strictEqual(r.json.data.description, '<b>Bold</b> and <em>italic</em> and <u>underline</u>');
+    await call('DELETE', '/api/ads/' + r.json.data.id);
+  });
+  await test('POST /api/ads rejects a description over 200 characters', async () => {
+    const r = await call('POST', '/api/ads', { kind: 'poster', name: 'Too Long', description: 'x'.repeat(201) });
+    assert.strictEqual(r.status, 400);
   });
   await test('POST /api/ads creates a listing entry (no link required)', async () => {
     const r = await call('POST', '/api/ads', {
