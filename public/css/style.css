@@ -169,10 +169,26 @@ button, input, select, textarea { font-family: inherit; font-size: 15px; }
 /* ---------- embedded live queue display ---------- */
 .embed-frame {
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
-  overflow: hidden; box-shadow: var(--shadow-sm); height: 720px;
+  overflow: hidden; box-shadow: var(--shadow-sm); height: 640px;
 }
 .embed-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
-@media (max-width: 640px) { .embed-frame { height: 520px; } }
+@media (max-width: 640px) { .embed-frame { height: 560px; } }
+
+/* The rest of the page reads best at 900px, but the live board's 7-column
+   grid needs real width to stay legible (each column holds a 4-5 digit
+   token number in a large font). Below ~1024px there isn't room to widen
+   it without crowding the rest of the layout, so it stays inside the
+   normal shell and the board's own responsive CSS falls back to fewer
+   columns. From 1024px up, break this one section out of the 900px shell
+   so all 7 counters can sit in one line as intended on desktop. */
+@media (min-width: 1024px) {
+  .embed-frame {
+    width: min(95vw, 1440px);
+    margin-left: 50%;
+    transform: translateX(-50%);
+    height: 620px;
+  }
+}
 
 /* ---------- ad ---------- */
 /* Bento-style adaptive grid: a single entry takes the full row (looks like
