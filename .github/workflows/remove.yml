@@ -1,0 +1,29 @@
+name: Remove Claude References
+on:
+  workflow_dispatch: # Allows you to trigger this manually from the Actions tab
+
+jobs:
+  rewrite-history:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetches all history for all branches
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git Author
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@://github.com"
+
+      - name: Strip Claude from Commit Messages
+        run: |
+          # Uses filter-branch to strip any line matching "Co-authored-by: Claude" across all branches
+          git filter-branch -f --msg-filter 'sed "/Co-authored-by: Claude/d"' -- --all
+
+      - name: Force Push Cleaned History
+        run: |
+          # Pushes the cleaned history back to GitHub
+          git push origin --force --all
+          git push origin --force --tags
