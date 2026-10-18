@@ -124,16 +124,16 @@ Sign in at `/admin` and work through this list. Keep the public page open in a s
 | 13 | Enter `abc` as the URL → Save | Inline error: *"VMS link must be a valid http(s) URL."* |
 | 14 | Untick *Show this card* → Save | Card disappears from the public page |
 
-### Advertisements (unified listing + poster)
+### Public Notices (unified listing + poster)
 | # | Action | Expected |
 |---|---|---|
-| 15 | New ad → Type: Poster → upload a poster (PNG/JPG) | Preview thumbnail updates immediately; large images auto-compress on save |
+| 15 | New public notice → Type: Poster → upload a poster (PNG/JPG) | Preview thumbnail updates immediately; large images auto-compress on save |
 | 16 | Set business name + website/Drive link → Save | Public entry shows the poster and name; clicking opens the confirmation modal, then the link |
 | 17 | Upload a 10 MB file | Error: file too large (4 MB limit) |
-| 18 | New ad → Type: Listing → add name + phone number | Appears publicly as a vendor-style row; the phone pill is a working `tel:` link on mobile |
+| 18 | New public notice → Type: Listing → add name + phone number | Appears publicly as a vendor-style row; the phone pill is a working `tel:` link on mobile |
 | 19 | Save either kind with an empty name | Inline error: *"Name is required."* |
 | 20 | Drag a row to a new position | Order persists after reload; public page reflects the same order |
-| 21 | Untick *Show on public site* on any entry | That entry disappears from the public "Advertisements" section only |
+| 21 | Untick *Show on public site* on any entry | That entry disappears from the public "Public Notices" section only |
 | 22 | Delete an entry | Confirmation prompt, then removed from both views |
 
 ### Logo, theme, account
@@ -142,7 +142,7 @@ Sign in at `/admin` and work through this list. Keep the public page open in a s
 | 23 | Upload a logo → Save | Replaces the circular "LOGO" placeholder in the public header |
 | 24 | Change the three brand colours → Save | Public page restyles on refresh (header, marquee, accents) |
 | 25 | Set banner scroll duration to 40 → Save | Marquee visibly slows down |
-| 26 | **Restore defaults** | Org name and links return to their seeded values (Advertisements are unaffected — manage those from their own tab) |
+| 26 | **Restore defaults** | Org name and links return to their seeded values (Public Notices are unaffected — manage those from their own tab) |
 | 27 | Change the password, sign out, sign in with the new one | Succeeds; the old password now fails |
 | 28 | Wait for the token to expire (or clear `localStorage`) and click anything | Kicked back to the login screen with *"Session expired"* |
 
@@ -194,7 +194,7 @@ curl -X POST http://localhost:4000/api/notices \
 | PUT | `/api/settings` | 🔒 | Update |
 | GET | `/api/links` | 🔓 | VMS + Grievance config |
 | PUT | `/api/links` | 🔒 | Update |
-| GET | `/api/ads` | 🔓 | List all Advertisements entries (listing + poster kinds) |
+| GET | `/api/ads` | 🔓 | List all Public Notices entries (listing + poster kinds) |
 | POST | `/api/ads` | 🔒 | Create |
 | PUT | `/api/ads/:id` | 🔒 | Update |
 | PATCH | `/api/ads/:id/toggle` | 🔒 | Enable / disable |

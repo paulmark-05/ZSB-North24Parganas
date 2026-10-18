@@ -210,7 +210,7 @@ async function test(name, fn) {
     assert.strictEqual(r.json.data.links.vms.label, 'Visitor Pass');
   });
 
-  console.log('\n── Advertisements (unified listing + poster) ──');
+  console.log('\n── Public Notices (unified listing + poster) ──');
   let posterId = null;
   let listingId = null;
   await test('POST /api/ads rejects a missing name', async () => {

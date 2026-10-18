@@ -16,7 +16,7 @@ Light (non-dark) surfaces throughout: `#ffffff` cards on an `#f4f7fb` page. Logo
 1. **Header** — logo, organisation name, district subtitle, tricolour bar.
 2. **Scrolling notice banner** — a red "NOTICE" tag plus a marquee that cycles through all *live* notices in sequence. Pauses on hover. Respects `prefers-reduced-motion`.
 3. **Services** — two cards: Visitor Management System, Grievance Redressal. Clicking either opens an **in-app confirmation modal** showing the destination URL before redirecting (opens in a new tab).
-4. **Advertisements** — one unified, manually-ordered list. Each entry is either a *listing* (initial-avatar, name, category · location, tap-to-call phone pill — the old "Vendors" concept) or a *poster* (image + business name, clicking opens the same confirmation modal then the linked website or Google Drive file). Order is set by dragging rows in the admin panel.
+4. **Public Notices** — one unified, manually-ordered list. Each entry is either a *listing* (initial-avatar, name, category · location, tap-to-call phone pill — the old "Vendors" concept) or a *poster* (image + business name, clicking opens the same confirmation modal then the linked website or Google Drive file). Order is set by dragging rows in the admin panel.
 5. **Footer** — copyright + Administrator Login link.
 
 ## 4. Notice model (the core requirement)
@@ -39,7 +39,7 @@ A single date and a range are both supported — leave the end date the same as 
 | Login | Real username/password → JWT (bcrypt-hashed, rate-limited) |
 | Notice Banner | Create / edit / enable / disable / delete notices; live preview; live/scheduled/expired badges |
 | VMS & Grievance | Title, description, redirect URL, confirmation text, show/hide — per card |
-| Advertisements | Add / edit / remove / hide entries (listing or poster kind); drag-and-drop manual reordering shared across both kinds |
+| Public Notices | Add / edit / remove / hide entries (listing or poster kind); drag-and-drop manual reordering shared across both kinds |
 | Logo & Theme | Org name, subtitle, logo upload, three brand colours, marquee speed, restore defaults |
 | Account | Change admin password |
 

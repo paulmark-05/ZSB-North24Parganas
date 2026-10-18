@@ -1,7 +1,7 @@
 {
   "name": "zila-sainik-board-portal",
   "version": "1.0.0",
-  "description": "Public portal + Admin CMS for Zila Sainik Board (Notice banner, VMS, Grievance, Vendors, Ads)",
+  "description": "Public portal + Admin CMS for Zila Sainik Board (Notice banner, VMS, Grievance, Vendors, Public Notices)",
   "main": "server/index.js",
   "type": "commonjs",
   "scripts": {
