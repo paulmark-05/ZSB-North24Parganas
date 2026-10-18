@@ -1,0 +1,43 @@
+name: Purge Claude From Contributors List
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  remove-contributor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@://github.com"
+
+      - name: Rewrite Committer and Author Info
+        run: |
+          export FILTER_BRANCH_SHTDN_ALLOW_EMPTY=1
+          
+          # Replace 'YOUR_NAME' and 'YOUR_EMAIL' below with your actual details 
+          # so the code changes remain, but the credit shifts to you.
+          git filter-branch -f --env-filter '
+            if echo "$GIT_AUTHOR_NAME" | grep -riq "claude" || echo "$GIT_AUTHOR_EMAIL" | grep -riq -E "claude|anthropic"; then
+                export GIT_AUTHOR_NAME="YOUR_NAME"
+                export GIT_AUTHOR_EMAIL="YOUR_EMAIL"
+            fi
+            if echo "$GIT_COMMITTER_NAME" | grep -riq "claude" || echo "$GIT_COMMITTER_EMAIL" | grep -riq -E "claude|anthropic"; then
+                export GIT_COMMITTER_NAME="paulmark-05"
+                export GIT_COMMITTER_EMAIL="nayanipaul.24@gmail.com"
+            fi
+          ' -- --all
+
+      - name: Force Push Cleaned History
+        run: |
+          git push origin --force --all
+          git push origin --force --tags
