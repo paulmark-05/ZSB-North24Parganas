@@ -69,7 +69,7 @@
     });
   }
 
-  /* Unified Advertisements section — each entry is either a `listing`
+  /* Unified Public Notices section — each entry is either a `listing`
      (vendor-style: name/phone/location) or a `poster` (image + link).
      Rendered in one list, in the admin's manually-set order. */
   function adCard(ad) {
@@ -91,7 +91,7 @@
         ${ad.imageUrl ? `<div class="banner"><img src="${esc(ad.imageUrl)}" alt="${esc(ad.name)}" /></div>` : ''}
         <div class="foot">
           <div class="foot-text">
-            <strong>${esc(ad.name || 'Advertisement')}</strong>
+            <strong>${esc(ad.name || 'Public Notice')}</strong>
             ${ad.description ? `<span class="desc">${ad.description}</span>` : ''}
           </div>
         </div>
@@ -111,11 +111,11 @@
     $$('#ads .ad').forEach((btn) => {
       const ad = list.find((a) => a.id === btn.dataset.id);
       btn.addEventListener('click', () => {
-        if (!ad.link) return toast('No link configured for this advertisement.', 'err');
+        if (!ad.link) return toast('No link configured for this public notice.', 'err');
         const text = ad.linkType === 'drive'
-          ? 'You are being redirected to the advertiser’s poster on Google Drive.'
-          : 'You are being redirected to the advertiser’s website.';
-        openModal(ad.name || 'Advertisement', text, ad.link);
+          ? 'You are being redirected to the poster on Google Drive.'
+          : 'You are being redirected to the linked website.';
+        openModal(ad.name || 'Public Notice', text, ad.link);
       });
     });
   }

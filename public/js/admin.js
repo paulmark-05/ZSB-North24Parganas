@@ -243,7 +243,7 @@
     } catch (err) { showErr('#linksErr', err.message); }
   });
 
-  /* ==================== ADVERTISEMENTS (unified) ==================== */
+  /* ==================== PUBLIC NOTICES (unified) ==================== */
   function paintAdPreview() {
     $('#adPreview').innerHTML = adImageUrl
       ? `<img src="${esc(adImageUrl)}" alt="poster" />`
@@ -253,12 +253,12 @@
   function adLinkTypeUI() {
     const t = ($$('input[name="adLinkType"]:checked')[0] || {}).value || 'website';
     if (t === 'drive') {
-      $('#adLinkLabel').textContent = 'Google Drive link (opens when the ad is clicked)';
+      $('#adLinkLabel').textContent = 'Google Drive link (opens when the notice is clicked)';
       $('#adLinkHint').textContent = 'Make sure the Drive file is shared as “Anyone with the link — Viewer”.';
       $('#adLink').placeholder = 'https://drive.google.com/file/d/…/view';
     } else {
-      $('#adLinkLabel').textContent = 'Website URL (opens when the ad is clicked)';
-      $('#adLinkHint').textContent = 'Any http(s) link — the advertiser’s own website, landing page, etc.';
+      $('#adLinkLabel').textContent = 'Website URL (opens when the notice is clicked)';
+      $('#adLinkHint').textContent = 'Any http(s) link — the relevant website, landing page, etc.';
       $('#adLink').placeholder = 'https://…';
     }
   }
@@ -282,14 +282,14 @@
 
   function openAdModal(ad) {
     editingAdId = ad ? ad.id : null;
-    $('#adModalTitle').textContent = ad ? 'Edit advertisement' : 'New advertisement';
+    $('#adModalTitle').textContent = ad ? 'Edit public notice' : 'New public notice';
     showErr('#adErr', '');
 
     const kind = ad ? ad.kind || 'poster' : 'poster';
     $$('input[name="adKind"]').forEach((r) => (r.checked = r.value === kind));
 
     $('#adName2').value = ad ? ad.name : '';
-    $('#adCaption').value = ad ? ad.caption || '' : 'Advertisement';
+    $('#adCaption').value = ad ? ad.caption || '' : 'Public Notice';
     $('#adDescription').innerHTML = ad ? ad.description || '' : '';
     $('#adCategory').value = ad ? ad.category || '' : '';
     $('#adLocation').value = ad ? ad.location || '' : '';
@@ -351,10 +351,10 @@
     }
     const isNew = !editingAdId;
     try {
-      await withLoading(isNew ? 'Publishing advertisement…' : 'Updating advertisement…', () =>
+      await withLoading(isNew ? 'Publishing public notice…' : 'Updating public notice…', () =>
         isNew ? API.post('/ads', body) : API.put('/ads/' + editingAdId, body)
       );
-      toast('Advertisement saved.', 'ok');
+      toast('Public notice saved.', 'ok');
       closeAdModal();
       loadAds();
     } catch (err) { showErr('#adErr', err.message); }
@@ -369,7 +369,7 @@
     const { data } = await API.get('/ads');
     const el = $('#adList');
     if (!data.length) {
-      el.innerHTML = '<div class="empty-state">No ads yet. Click “New ad” to add one.</div>';
+      el.innerHTML = '<div class="empty-state">No public notices yet. Click “New public notice” to add one.</div>';
       return;
     }
     el.innerHTML = data
@@ -397,11 +397,11 @@
         const a = data.find((x) => x.id === b.dataset.id);
         try {
           if (b.dataset.act === 'edit') return openAdModal(a);
-          if (b.dataset.act === 'toggle') { await API.patch('/ads/' + a.id + '/toggle'); toast('Ad updated.', 'ok'); }
+          if (b.dataset.act === 'toggle') { await API.patch('/ads/' + a.id + '/toggle'); toast('Public notice updated.', 'ok'); }
           if (b.dataset.act === 'del') {
             if (!confirm(`Delete “${a.name}”?`)) return;
             await API.del('/ads/' + a.id);
-            toast('Ad deleted.', 'ok');
+            toast('Public notice deleted.', 'ok');
           }
           loadAds();
         } catch (err) { toast(err.message, 'err'); }

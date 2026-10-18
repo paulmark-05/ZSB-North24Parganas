@@ -80,7 +80,7 @@ const AdSchema = new Schema(
     phone: { type: String, default: '' },
     category: { type: String, default: '' },
     // poster fields
-    caption: { type: String, default: 'Advertisement' },
+    caption: { type: String, default: 'Public Notice' },
     description: { type: String, default: '' },
     imageUrl: { type: String, default: '' },
     linkType: { type: String, enum: ['website', 'drive'], default: 'website' },

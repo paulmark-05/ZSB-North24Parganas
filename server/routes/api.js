@@ -287,7 +287,7 @@ function adPayload(b = {}) {
     active: b.active === undefined ? true : !!b.active,
     order: Number.isFinite(Number(b.order)) ? Number(b.order) : 0,
     location: '', phone: '', category: '',
-    caption: 'Advertisement', description: '', imageUrl: '', linkType: 'website', link: '',
+    caption: 'Public Notice', description: '', imageUrl: '', linkType: 'website', link: '',
   };
 
   if (kind === 'listing') {
@@ -297,8 +297,8 @@ function adPayload(b = {}) {
   } else {
     const linkType = b.linkType === 'drive' ? 'drive' : 'website';
     const link = String(b.link || '').trim();
-    if (link && !isHttpUrl(link)) return { ok: false, error: 'Ad link must be a valid http(s) URL.' };
-    value.caption = String(b.caption || '').trim() || 'Advertisement';
+    if (link && !isHttpUrl(link)) return { ok: false, error: 'Link must be a valid http(s) URL.' };
+    value.caption = String(b.caption || '').trim() || 'Public Notice';
     const description = sanitizeRich(b.description, 200);
     if (description === null) return { ok: false, error: 'Description must be 200 characters or fewer.' };
     value.description = description;
@@ -327,7 +327,7 @@ router.put('/ads/:id', requireAuth, async (req, res, next) => {
     const p = adPayload(req.body);
     if (!p.ok) return res.status(400).json({ ok: false, error: p.error });
     const updated = await getStore().update('ads', req.params.id, p.value);
-    if (!updated) return res.status(404).json({ ok: false, error: 'Ad not found.' });
+    if (!updated) return res.status(404).json({ ok: false, error: 'Public notice not found.' });
     res.json({ ok: true, data: updated });
   } catch (err) {
     next(err);
@@ -338,7 +338,7 @@ router.patch('/ads/:id/toggle', requireAuth, async (req, res, next) => {
   try {
     const list = await getStore().list('ads');
     const found = list.find((a) => a.id === req.params.id);
-    if (!found) return res.status(404).json({ ok: false, error: 'Ad not found.' });
+    if (!found) return res.status(404).json({ ok: false, error: 'Public notice not found.' });
     const updated = await getStore().update('ads', req.params.id, { active: !found.active });
     res.json({ ok: true, data: updated });
   } catch (err) {
@@ -350,7 +350,7 @@ router.patch('/ads/:id/toggle', requireAuth, async (req, res, next) => {
 router.post('/ads/reorder', requireAuth, async (req, res, next) => {
   try {
     const ids = Array.isArray(req.body?.order) ? req.body.order : null;
-    if (!ids || !ids.length) return res.status(400).json({ ok: false, error: 'order must be a non-empty array of ad ids.' });
+    if (!ids || !ids.length) return res.status(400).json({ ok: false, error: 'order must be a non-empty array of public notice ids.' });
     const store = getStore();
     await Promise.all(ids.map((id, i) => store.update('ads', id, { order: i })));
     res.json({ ok: true, data: await store.list('ads') });
@@ -362,8 +362,8 @@ router.post('/ads/reorder', requireAuth, async (req, res, next) => {
 router.delete('/ads/:id', requireAuth, async (req, res, next) => {
   try {
     const done = await getStore().remove('ads', req.params.id);
-    if (!done) return res.status(404).json({ ok: false, error: 'Ad not found.' });
-    res.json({ ok: true, message: 'Ad deleted.' });
+    if (!done) return res.status(404).json({ ok: false, error: 'Public notice not found.' });
+    res.json({ ok: true, message: 'Public notice deleted.' });
   } catch (err) {
     next(err);
   }
